@@ -1,90 +1,95 @@
 import sys
 import string
-from pynput import keyboard
+import Quartz
 
-# 检查是否在 macOS 上运行，因为此脚本现在依赖于 macOS 特定的 API
+# 检查是否在 macOS 上运行
 if sys.platform != 'darwin':
     print("错误：此脚本专为 macOS 设计。")
     sys.exit(1)
 
-try:
-    # 导入 macOS 的 Quartz 框架，用于原生事件模拟
-    import Quartz
-except ImportError:
-    print("错误：需要 pyobjc-framework-Quartz 库。")
-    print("请通过以下命令安装：pip install pyobjc-framework-Quartz")
-    sys.exit(1)
+# --- 配置 ---
 
-# --- macOS 原生按键模拟 ---
+# 用于标记我们自己创建的事件的唯一ID，以避免无限循环
+OUR_EVENT_TAG = 12345
 
-# 这是美国 QWERTY 键盘布局的虚拟键码。
-# CoreGraphics 使用键码而非字符来模拟输入。
+# 美国 QWERTY 键盘布局的虚拟键码
 KEYCODES = {
     'a': 0x00, 's': 0x01, 'd': 0x02, 'f': 0x03, 'h': 0x04, 'g': 0x05, 'z': 0x06,
     'x': 0x07, 'c': 0x08, 'v': 0x09, 'b': 0x0B, 'q': 0x0C, 'w': 0x0D, 'e': 0x0E,
     'r': 0x0F, 'y': 0x10, 't': 0x11, 'o': 0x1F, 'u': 0x20, 'i': 0x22, 'p': 0x23,
     'l': 0x25, 'j': 0x26, 'k': 0x28, 'n': 0x2D, 'm': 0x2E,
 }
+KEYCODE_TO_CHAR = {v: k for k, v in KEYCODES.items()}
+ESC_KEYCODE = 0x35  # 'esc' 键的键码
 
-def post_key(char):
-    """
-    使用 CoreGraphics 模拟指定字符的按下和释放。
-    这种方法不会被我们自己的 pynput 监听器捕获。
-    """
-    try:
-        keycode = KEYCODES[char]
-    except KeyError:
-        # 如果映射中没有这个字符，就忽略它
-        return
-
-    # 创建并发送“按下”事件
-    keydown = Quartz.CGEventCreateKeyboardEvent(None, keycode, True)
-    Quartz.CGEventPost(Quartz.kCGHIDEventTap, keydown)
-
-    # 创建并发送“释放”事件
-    keyup = Quartz.CGEventCreateKeyboardEvent(None, keycode, False)
-    Quartz.CGEventPost(Quartz.kCGHIDEventTap, keyup)
-
-
-# --- 重映射逻辑 ---
-
-# 创建字符映射: a->b, b->c, ..., z->a
+# 创建字符重映射规则: a->b, b->c, ..., z->a
 LOWERCASE_LETTERS = string.ascii_lowercase
 MAPPING = {LOWERCASE_LETTERS[i]: LOWERCASE_LETTERS[i+1] for i in range(len(LOWERCASE_LETTERS) - 1)}
 MAPPING['z'] = 'a'
 
+# --- 核心功能 ---
 
-def on_press(key):
-    """处理按键事件"""
-    try:
-        # 检查按下的键是否是我们需要重映射的字符
-        if key.char in MAPPING:
-            target_char = MAPPING[key.char]
-            # 使用原生 API 模拟按键
-            post_key(target_char)
-            # 您添加的这行打印语句可以帮助调试，我将它保留
-            print(f"post key {target_char=}")
-            # 【重要改动】移除了 return False，以防止监听器停止
-    except AttributeError:
-        # 忽略特殊键 (如 shift, ctrl)
-        pass
+def post_key(char):
+    """使用 CoreGraphics 模拟指定字符的按下和释放，并为事件打上标记。"""
+    if (keycode := KEYCODES.get(char)) is None:
+        return
+    
+    keydown = Quartz.CGEventCreateKeyboardEvent(None, keycode, True)
+    keyup = Quartz.CGEventCreateKeyboardEvent(None, keycode, False)
+    
+    # 【关键改动】为我们创建的事件设置一个唯一的标记
+    Quartz.CGEventSetIntegerValueField(keydown, Quartz.kCGEventSourceUserData, OUR_EVENT_TAG)
+    Quartz.CGEventSetIntegerValueField(keyup, Quartz.kCGEventSourceUserData, OUR_EVENT_TAG)
+    
+    Quartz.CGEventPost(Quartz.kCGHIDEventTap, keydown)
+    Quartz.CGEventPost(Quartz.kCGHIDEventTap, keyup)
 
-def on_release(key):
-    """处理按键释放事件"""
-    if key == keyboard.Key.esc:
-        print("程序已退出。")
-        # 在这里 return False 是正确的，因为我们确实希望在按下 esc 时停止程序
-        return False
+def event_callback(proxy, type, event, refcon):
+    """处理键盘事件的回调函数。"""
+    # 【关键改动】检查事件标记，如果存在，则说明是我们自己发送的，直接放行
+    if Quartz.CGEventGetIntegerValueField(event, Quartz.kCGEventSourceUserData) == OUR_EVENT_TAG:
+        return event
 
-def run_remapping():
-    """启动键盘监听"""
+    if type != Quartz.kCGEventKeyDown:
+        return event
+
+    keycode = Quartz.CGEventGetIntegerValueField(event, Quartz.kCGKeyboardEventKeycode)
+
+    if keycode == ESC_KEYCODE:
+        Quartz.CFRunLoopStop(Quartz.CFRunLoopGetCurrent())
+        return None
+
+    flags = Quartz.CGEventGetFlags(event)
+    if flags & (Quartz.kCGEventFlagMaskCommand | Quartz.kCGEventFlagMaskAlternate | 
+                Quartz.kCGEventFlagMaskControl | Quartz.kCGEventFlagMaskShift):
+        return event
+
+    if (char := KEYCODE_TO_CHAR.get(keycode)) and (target := MAPPING.get(char)):
+        post_key(target)
+        return None  # 阻止原始按键事件
+
+    return event
+
+# --- 主程序 ---
+
+def main():
+    """启动键盘重映射服务。"""
     print("键盘重映射已启动。按 'esc' 键退出程序。")
-    # 【重要改动】添加 suppress=True 来自动阻止原始按键事件
-    with keyboard.Listener(
-        on_press=on_press, 
-        on_release=on_release, 
-        suppress=True) as listener:
-        listener.join()
+
+    event_tap = Quartz.CGEventTapCreate(
+        Quartz.kCGSessionEventTap, Quartz.kCGHeadInsertEventTap, Quartz.kCGEventTapOptionDefault,
+        Quartz.CGEventMaskBit(Quartz.kCGEventKeyDown), event_callback, None
+    )
+
+    if not event_tap:
+        print("错误：无法创建事件监听。请检查辅助功能权限。")
+        print("前往：系统设置 -> 隐私与安全性 -> 辅助功能，然后添加您的终端或应用。")
+        sys.exit(1)
+
+    run_loop_source = Quartz.CFMachPortCreateRunLoopSource(None, event_tap, 0)
+    Quartz.CFRunLoopAddSource(Quartz.CFRunLoopGetCurrent(), run_loop_source, Quartz.kCFRunLoopCommonModes)
+    Quartz.CGEventTapEnable(event_tap, True)
+    Quartz.CFRunLoopRun()
 
 if __name__ == "__main__":
-    run_remapping()
+    main()
