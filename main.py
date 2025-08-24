@@ -1,89 +1,142 @@
+from sre_parse import SPECIAL_CHARS
 import sys
-import string
+from enum import Enum, auto
 import Quartz
 
-# 检查是否在 macOS 上运行
-if sys.platform != 'darwin':
-    print("错误：此脚本专为 macOS 设计。")
-    sys.exit(1)
+# --- Configuration ---
+H_KEY_CODE = 0x04
+J_KEY_CODE = 0x26
+K_KEY_CODE = 0x28
+L_KEY_CODE = 0x25
 
-# --- 配置 ---
+LEFT_ARROW_KEY_CODE = 0x7B
+DOWN_ARROW_KEY_CODE = 0x7D
+UP_ARROW_KEY_CODE = 0x7E
+RIGHT_ARROW_KEY_CODE = 0x7C
 
-# 用于标记我们自己创建的事件的唯一ID，以避免无限循环
+SPACE_KEY_CODE = 0x31
+
+HYPER_KEYS_MAP = {
+    H_KEY_CODE: LEFT_ARROW_KEY_CODE,
+    J_KEY_CODE: DOWN_ARROW_KEY_CODE,
+    K_KEY_CODE: UP_ARROW_KEY_CODE,
+    L_KEY_CODE: RIGHT_ARROW_KEY_CODE,
+}
+
 OUR_EVENT_TAG = 12345
 
-# 美国 QWERTY 键盘布局的虚拟键码
-KEYCODES = {
-    'a': 0x00, 's': 0x01, 'd': 0x02, 'f': 0x03, 'h': 0x04, 'g': 0x05, 'z': 0x06,
-    'x': 0x07, 'c': 0x08, 'v': 0x09, 'b': 0x0B, 'q': 0x0C, 'w': 0x0D, 'e': 0x0E,
-    'r': 0x0F, 'y': 0x10, 't': 0x11, 'o': 0x1F, 'u': 0x20, 'i': 0x22, 'p': 0x23,
-    'l': 0x25, 'j': 0x26, 'k': 0x28, 'n': 0x2D, 'm': 0x2E,
-}
-KEYCODE_TO_CHAR = {v: k for k, v in KEYCODES.items()}
-ESC_KEYCODE = 0x35  # 'esc' 键的键码
+class State(Enum):
+    IDLE = auto()
+    ONLY_SPACE_DOWN = auto()
+    SPACE_NORM_DOWN = auto()
+    HYPER_MODE = auto()
 
-# 创建字符重映射规则: a->b, b->c, ..., z->a
-LOWERCASE_LETTERS = string.ascii_lowercase
-MAPPING = {LOWERCASE_LETTERS[i]: LOWERCASE_LETTERS[i+1] for i in range(len(LOWERCASE_LETTERS) - 1)}
-MAPPING['z'] = 'a'
+class HyperSpace:
+    def __init__(self):
+        self.state = State.IDLE
+        self.candidate_key = None
+        
+    def set_state(self, state):
+        print(f"[set state] {self.state} → {state}")
+        self.state = state
+        
+    def action_key(self, key_code, is_down:bool):
+        event = Quartz.CGEventCreateKeyboardEvent(None, key_code, is_down)
+        Quartz.CGEventSetIntegerValueField(event, Quartz.kCGEventSourceUserData, OUR_EVENT_TAG)
+        Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)
+    
+    def down_key(self, key_code):
+        self.action_key(key_code, True)
+    def up_key(self, key_code):
+        self.action_key(key_code, False)
+    def press_key(self, key_code):
+        self.down_key(key_code)
+        self.up_key(key_code)
 
-# --- 核心功能 ---
+    def post_key(self, key_code, is_down):
+        event = Quartz.CGEventCreateKeyboardEvent(None, key_code, is_down)
+        Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)
 
-def post_key(char):
-    """使用 CoreGraphics 模拟指定字符的按下和释放，并为事件打上标记。"""
-    if (keycode := KEYCODES.get(char)) is None:
-        return
-    
-    keydown = Quartz.CGEventCreateKeyboardEvent(None, keycode, True)
-    keyup = Quartz.CGEventCreateKeyboardEvent(None, keycode, False)
-    
-    # 【关键改动】为我们创建的事件设置一个唯一的标记
-    Quartz.CGEventSetIntegerValueField(keydown, Quartz.kCGEventSourceUserData, OUR_EVENT_TAG)
-    Quartz.CGEventSetIntegerValueField(keyup, Quartz.kCGEventSourceUserData, OUR_EVENT_TAG)
-    
-    Quartz.CGEventPost(Quartz.kCGHIDEventTap, keydown)
-    Quartz.CGEventPost(Quartz.kCGHIDEventTap, keyup)
+    def handle_key_event(self, key_code, is_down):
+        is_up = not is_down
+        if self.state == State.IDLE:
+            if key_code == SPACE_KEY_CODE and is_down:
+                self.set_state(State.ONLY_SPACE_DOWN)
+                return False
+            else:
+                return True
+        elif self.state == State.ONLY_SPACE_DOWN:
+            if key_code == SPACE_KEY_CODE and is_up:
+                self.set_state(State.IDLE)
+                self.press_key(SPACE_KEY_CODE)
+                return False
+            elif is_down:
+                self.set_state(State.SPACE_NORM_DOWN)
+                self.candidate_key = key_code
+                return False
+            else:
+                self.set_state(State.IDLE)
+                # self.up_key(SPACE_KEY_CODE)
+                self.press_key(SPACE_KEY_CODE)
+                return True
+        elif self.state == State.SPACE_NORM_DOWN:
+            if key_code == SPACE_KEY_CODE and is_up:
+                # normal space
+                self.set_state(State.IDLE)
+                self.press_key(SPACE_KEY_CODE)
+                self.down_key(self.candidate_key)
+                return False
+            elif key_code == self.candidate_key and is_up:
+                # hyper mode
+                self.set_state(State.HYPER_MODE)
+                if self.candidate_key in HYPER_KEYS_MAP:
+                    self.press_key(HYPER_KEYS_MAP[self.candidate_key])
+                else:
+                    self.press_key(self.candidate_key)
+                return False
+            else:
+                # normal mode
+                self.set_state(State.IDLE)
+                self.press_key(SPACE_KEY_CODE)
+                self.down_key(self.candidate_key)
+                return True
+        elif self.state == State.HYPER_MODE:
+            if key_code == SPACE_KEY_CODE and is_up:
+                self.set_state(State.IDLE)
+                return False
+            elif key_code in HYPER_KEYS_MAP and is_down:
+                self.press_key(HYPER_KEYS_MAP[key_code])
+                return False
+            else:
+                return True
+
+hyper_space = HyperSpace()
 
 def event_callback(proxy, type, event, refcon):
-    """处理键盘事件的回调函数。"""
-    # 【关键改动】检查事件标记，如果存在，则说明是我们自己发送的，直接放行
     if Quartz.CGEventGetIntegerValueField(event, Quartz.kCGEventSourceUserData) == OUR_EVENT_TAG:
         return event
-
-    if type != Quartz.kCGEventKeyDown:
+    
+    if type not in [Quartz.kCGEventKeyDown, Quartz.kCGEventKeyUp]:
         return event
 
-    keycode = Quartz.CGEventGetIntegerValueField(event, Quartz.kCGKeyboardEventKeycode)
+    key_code = Quartz.CGEventGetIntegerValueField(event, Quartz.kCGKeyboardEventKeycode)
+    is_down = (type == Quartz.kCGEventKeyDown)
+    is_up = (type == Quartz.kCGEventKeyUp)
 
-    if keycode == ESC_KEYCODE:
-        Quartz.CFRunLoopStop(Quartz.CFRunLoopGetCurrent())
-        return None
-
-    flags = Quartz.CGEventGetFlags(event)
-    if flags & (Quartz.kCGEventFlagMaskCommand | Quartz.kCGEventFlagMaskAlternate | 
-                Quartz.kCGEventFlagMaskControl | Quartz.kCGEventFlagMaskShift):
-        return event
-
-    if (char := KEYCODE_TO_CHAR.get(keycode)) and (target := MAPPING.get(char)):
-        post_key(target)
-        return None  # 阻止原始按键事件
+    if not hyper_space.handle_key_event(key_code, is_down):
+        return None  # Suppress event
 
     return event
 
-# --- 主程序 ---
-
 def main():
-    """启动键盘重映射服务。"""
-    print("键盘重映射已启动。按 'esc' 键退出程序。")
-
     event_tap = Quartz.CGEventTapCreate(
         Quartz.kCGSessionEventTap, Quartz.kCGHeadInsertEventTap, Quartz.kCGEventTapOptionDefault,
-        Quartz.CGEventMaskBit(Quartz.kCGEventKeyDown), event_callback, None
-    )
+        Quartz.CGEventMaskBit(Quartz.kCGEventKeyDown) | Quartz.CGEventMaskBit(Quartz.kCGEventKeyUp), 
+        event_callback, None
+    )   
 
     if not event_tap:
-        print("错误：无法创建事件监听。请检查辅助功能权限。")
-        print("前往：系统设置 -> 隐私与安全性 -> 辅助功能，然后添加您的终端或应用。")
+        print("Error: Unable to create event tap.")
         sys.exit(1)
 
     run_loop_source = Quartz.CFMachPortCreateRunLoopSource(None, event_tap, 0)
