@@ -1,6 +1,6 @@
 from enum import Enum, auto
 import Quartz
-from key_codes import key_codes
+from key_codes import KeyCodes
 
 OUR_EVENT_TAG = 12345
 
@@ -15,10 +15,10 @@ class HyperSpace:
         self.state = State.IDLE
         self.candidate_key = None
         self.hyper_keys_map = {
-            key_codes["h"]: key_codes["left_arrow"],
-            key_codes["j"]: key_codes["down_arrow"],
-            key_codes["k"]: key_codes["up_arrow"],
-            key_codes["l"]: key_codes["right_arrow"],
+            KeyCodes.h: KeyCodes.left_arrow,
+            KeyCodes.j: KeyCodes.down_arrow,
+            KeyCodes.k: KeyCodes.up_arrow,
+            KeyCodes.l: KeyCodes.right_arrow,
         }
 
     def set_state(self, state):
@@ -43,15 +43,15 @@ class HyperSpace:
     def handle_key_event(self, key_code, is_down):
         is_up = not is_down
         if self.state == State.IDLE:
-            if key_code == key_codes["space"] and is_down:
+            if key_code == KeyCodes.space and is_down:
                 self.set_state(State.ONLY_SPACE_DOWN)
                 return False
             else:
                 return True
         elif self.state == State.ONLY_SPACE_DOWN:
-            if key_code == key_codes["space"] and is_up:
+            if key_code == KeyCodes.space and is_up:
                 self.set_state(State.IDLE)
-                self.press_key(key_codes["space"])
+                self.press_key(KeyCodes.space)
                 return False
             elif is_down:
                 self.set_state(State.SPACE_NORM_DOWN)
@@ -59,12 +59,12 @@ class HyperSpace:
                 return False
             else:
                 self.set_state(State.IDLE)
-                self.press_key(key_codes["space"])
+                self.press_key(KeyCodes.space)
                 return True
         elif self.state == State.SPACE_NORM_DOWN:
-            if key_code == key_codes["space"] and is_up:
+            if key_code == KeyCodes.space and is_up:
                 self.set_state(State.IDLE)
-                self.press_key(key_codes["space"])
+                self.press_key(KeyCodes.space)
                 self.down_key(self.candidate_key)
                 return False
             elif key_code == self.candidate_key and is_up:
@@ -76,11 +76,11 @@ class HyperSpace:
                 return False
             else:
                 self.set_state(State.IDLE)
-                self.press_key(key_codes["space"])
+                self.press_key(KeyCodes.space)
                 self.down_key(self.candidate_key)
                 return True
         elif self.state == State.HYPER_MODE:
-            if key_code == key_codes["space"] and is_up:
+            if key_code == KeyCodes.space and is_up:
                 self.set_state(State.IDLE)
                 return False
             elif key_code in self.hyper_keys_map and is_down:
