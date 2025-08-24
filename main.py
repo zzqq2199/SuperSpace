@@ -131,7 +131,7 @@ def event_callback(proxy, type, event, refcon):
 def main():
     event_tap = Quartz.CGEventTapCreate(
         Quartz.kCGSessionEventTap, Quartz.kCGHeadInsertEventTap, Quartz.kCGEventTapOptionDefault,
-        Quartz.CGEventMaskBit(Quartz.kCGEventKeyDown) | Quartz.CGEventMaskBit(Quartz.kCGEventKeyUp), 
+        Quartz.CGEventMaskBit(Quartz.kCGEventKeyDown) | Quartz.CGEventMaskBit(Quartz.kCGEventKeyUp),
         event_callback, None
     )   
 
