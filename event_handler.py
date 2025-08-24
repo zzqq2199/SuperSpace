@@ -40,7 +40,7 @@ class HyperSpace:
         self.down_key(key_code)
         self.up_key(key_code)
 
-    def handle_key_event(self, key_code, is_down):
+    def handle_key_event(self, key_code, is_down, is_modifier):
         is_up = not is_down
         print(f"{key_code=}, {is_down=}")
         if self.state == State.IDLE:
@@ -55,9 +55,13 @@ class HyperSpace:
                 self.press_key(KeyCodes.space)
                 return False
             elif is_down:
-                self.set_state(State.SPACE_NORM_DOWN)
-                self.candidate_key = key_code
-                return False
+                if not is_modifier:
+                    self.set_state(State.SPACE_NORM_DOWN)
+                    self.candidate_key = key_code
+                    return False
+                else:
+                    self.set_state(State.HYPER_MODE)
+                    return True
             else:
                 self.set_state(State.IDLE)
                 self.press_key(KeyCodes.space)
@@ -83,6 +87,8 @@ class HyperSpace:
         elif self.state == State.HYPER_MODE:
             if key_code == KeyCodes.space and is_up:
                 self.set_state(State.IDLE)
+                return False
+            elif key_code == KeyCodes.space and is_down:
                 return False
             elif key_code in self.hyper_keys_map and is_down:
                 self.press_key(self.hyper_keys_map[key_code])

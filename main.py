@@ -9,19 +9,19 @@ def event_callback(proxy, type, event, refcon):
     if Quartz.CGEventGetIntegerValueField(event, Quartz.kCGEventSourceUserData) == OUR_EVENT_TAG:
         return event
     
-    print(f"{type=}, {event=}, {refcon=}")
-
     if type not in [Quartz.kCGEventKeyDown, Quartz.kCGEventKeyUp, Quartz.kCGEventFlagsChanged]:
         return event
 
     key_code = Quartz.CGEventGetIntegerValueField(event, Quartz.kCGKeyboardEventKeycode)
     
     is_down = False
+    is_modifier = False
     if type == Quartz.kCGEventKeyDown:
         is_down = True
     elif type == Quartz.kCGEventKeyUp:
         is_down = False
     elif type == Quartz.kCGEventFlagsChanged:
+        is_modifier = True
         flags = Quartz.CGEventGetFlags(event)
         if key_code in [KeyCodes.shift, KeyCodes.right_shift]:
             is_down = (flags & Quartz.kCGEventFlagMaskShift) != 0
@@ -36,7 +36,7 @@ def event_callback(proxy, type, event, refcon):
         else:
             return event
 
-    if not hyper_space.handle_key_event(key_code, is_down):
+    if not hyper_space.handle_key_event(key_code, is_down, is_modifier):
         return None  # Suppress event
 
     return event
