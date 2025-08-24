@@ -42,6 +42,7 @@ class HyperSpace:
 
     def handle_key_event(self, key_code, is_down):
         is_up = not is_down
+        print(f"{key_code=}, {is_down=}")
         if self.state == State.IDLE:
             if key_code == KeyCodes.space and is_down:
                 self.set_state(State.ONLY_SPACE_DOWN)
