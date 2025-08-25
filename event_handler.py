@@ -19,6 +19,15 @@ class HyperSpace:
             KeyCodes.j: KeyCodes.down_arrow,
             KeyCodes.k: KeyCodes.up_arrow,
             KeyCodes.l: KeyCodes.right_arrow,
+            KeyCodes.y: KeyCodes.home,
+            KeyCodes.o: KeyCodes.end,
+            KeyCodes.u: KeyCodes.page_down,
+            KeyCodes.i: KeyCodes.page_up,
+            KeyCodes.e: KeyCodes.escape,
+            KeyCodes.m: KeyCodes.delete,
+            KeyCodes.n: KeyCodes.forward_delete,
+            KeyCodes.b: KeyCodes.forward_delete,
+            
         }
 
     def set_state(self, state):
@@ -74,10 +83,14 @@ class HyperSpace:
                 return False
             elif key_code == self.candidate_key and is_up:
                 self.set_state(State.HYPER_MODE)
-                if self.candidate_key in self.hyper_keys_map:
-                    self.press_key(self.hyper_keys_map[self.candidate_key])
-                else:
-                    self.press_key(self.candidate_key)
+                target_key = self.hyper_keys_map.get(self.candidate_key, self.candidate_key)
+                self.press_key(target_key)
+                return False
+            elif key_code == self.candidate_key and is_down:
+                self.set_state(State.HYPER_MODE)
+                target_key = self.hyper_keys_map.get(self.candidate_key, self.candidate_key)
+                self.press_key(target_key)
+                self.press_key(target_key)
                 return False
             else:
                 self.set_state(State.IDLE)
