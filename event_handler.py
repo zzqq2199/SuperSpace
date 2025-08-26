@@ -2,8 +2,13 @@ from dataclasses import dataclass
 from enum import Enum, auto
 import Quartz
 from key_codes import KeyCodes
+import json
+import os
 
 OUR_EVENT_TAG = 12345
+
+# Get the directory of the current script
+sCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Create a mapping from key code to human-readable name
 code_to_name = {}
@@ -93,38 +98,55 @@ class HyperSpace:
     def __init__(self):
         self.state = State.IDLE
         self.candidate_key = None
-        self.hyper_keys_map = {
-            KeyCodes.h: Keys(KeyCodes.left_arrow),
-            KeyCodes.j: Keys(KeyCodes.down_arrow),
-            KeyCodes.k: Keys(KeyCodes.up_arrow),
-            KeyCodes.l: Keys(KeyCodes.right_arrow),
-            KeyCodes.y: Keys(KeyCodes.left_arrow, [KeyCodes.command]),
-            KeyCodes.o: Keys(KeyCodes.right_arrow, [KeyCodes.command]),
-            # KeyCodes.y: Keys(KeyCodes.home),
-            # KeyCodes.o: Keys(KeyCodes.end),
-            KeyCodes.u: Keys(KeyCodes.page_down),
-            KeyCodes.i: Keys(KeyCodes.page_up),
-            KeyCodes.e: Keys(KeyCodes.escape),
-            KeyCodes.m: Keys(KeyCodes.delete),
-            KeyCodes.n: Keys(KeyCodes.delete, [KeyCodes.option]),      # delete a word,
-            KeyCodes.b: Keys(KeyCodes.delete, [KeyCodes.command]),    # delete whole line,
-            KeyCodes.comma: Keys(KeyCodes.forward_delete),
-            KeyCodes.period: Keys(KeyCodes.forward_delete, [KeyCodes.option]),
-            KeyCodes.slash: Keys(KeyCodes.forward_delete, [KeyCodes.command]),
-            KeyCodes.k_1: Keys(KeyCodes.f1),
-            KeyCodes.k_2: Keys(KeyCodes.f2),
-            KeyCodes.k_3: Keys(KeyCodes.f3),
-            KeyCodes.k_4: Keys(KeyCodes.f4),
-            KeyCodes.k_5: Keys(KeyCodes.f5),
-            KeyCodes.k_6: Keys(KeyCodes.f6),
-            KeyCodes.k_7: Keys(KeyCodes.f7),
-            KeyCodes.k_8: Keys(KeyCodes.f8),
-            KeyCodes.k_9: Keys(KeyCodes.f9),
-            KeyCodes.k_0: Keys(KeyCodes.f10),
-            KeyCodes.minus: Keys(KeyCodes.f11),
-            KeyCodes.equal: Keys(KeyCodes.f12)
-        }
+        self.hyper_keys_map = self._load_hyper_keys_map()
         self.pressed_modifiers = set()
+    
+    def _load_hyper_keys_map(self):
+        """
+        Load hyper keys mapping from config.json file
+        """
+        config_path = os.path.join(sCRIPT_DIR, 'config.json')
+        try:
+            with open(config_path, 'r') as f:
+                config = json.load(f)
+                
+            hyper_keys_map = {}
+            for source_key_name, target_key_info in config.get('hyper_keys_map', {}).items():
+                # Get source key code
+                source_key_code = getattr(KeyCodes, source_key_name, None)
+                if source_key_code is None:
+                    print(f"Warning: Key '{source_key_name}' not found in KeyCodes")
+                    continue
+                
+                # Get target key code
+                target_key_name = target_key_info.get('key')
+                target_key_code = getattr(KeyCodes, target_key_name, None)
+                if target_key_code is None:
+                    print(f"Warning: Target key '{target_key_name}' not found in KeyCodes")
+                    continue
+                
+                # Get modifiers
+                modifiers = []
+                for mod_name in target_key_info.get('modifiers', []):
+                    mod_code = getattr(KeyCodes, mod_name, None)
+                    if mod_code is not None:
+                        modifiers.append(mod_code)
+                    else:
+                        print(f"Warning: Modifier '{mod_name}' not found in KeyCodes")
+                
+                # Create Keys object
+                hyper_keys_map[source_key_code] = Keys(target_key_code, modifiers)
+                
+            return hyper_keys_map
+        except Exception as e:
+            print(f"Error loading config.json: {e}")
+            # Return a minimal fallback mapping if config file can't be loaded
+            return {
+                KeyCodes.h: Keys(KeyCodes.left_arrow),
+                KeyCodes.j: Keys(KeyCodes.down_arrow),
+                KeyCodes.k: Keys(KeyCodes.up_arrow),
+                KeyCodes.l: Keys(KeyCodes.right_arrow),
+            }
     def get_mapped_key(self, keycode:int)->Keys:
         if keycode in self.hyper_keys_map:
             return self.hyper_keys_map

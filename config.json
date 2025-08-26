@@ -1,0 +1,31 @@
+{
+    "hyper_keys_map": {
+        "h": {"key": "left_arrow"},
+        "j": {"key": "down_arrow"},
+        "k": {"key": "up_arrow"},
+        "l": {"key": "right_arrow"},
+        "y": {"key": "left_arrow", "modifiers": ["command"]},
+        "o": {"key": "right_arrow", "modifiers": ["command"]},
+        "u": {"key": "page_down"},
+        "i": {"key": "page_up"},
+        "e": {"key": "escape"},
+        "m": {"key": "delete"},
+        "n": {"key": "delete", "modifiers": ["option"]},
+        "b": {"key": "delete", "modifiers": ["command"]},
+        "comma": {"key": "forward_delete"},
+        "period": {"key": "forward_delete", "modifiers": ["option"]},
+        "slash": {"key": "forward_delete", "modifiers": ["command"]},
+        "k_1": {"key": "f1"},
+        "k_2": {"key": "f2"},
+        "k_3": {"key": "f3"},
+        "k_4": {"key": "f4"},
+        "k_5": {"key": "f5"},
+        "k_6": {"key": "f6"},
+        "k_7": {"key": "f7"},
+        "k_8": {"key": "f8"},
+        "k_9": {"key": "f9"},
+        "k_0": {"key": "f10"},
+        "minus": {"key": "f11"},
+        "equal": {"key": "f12"}
+    }
+}
