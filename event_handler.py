@@ -59,6 +59,7 @@ modifier2flag = {
     KeyCodes.option: Quartz.kCGEventFlagMaskAlternate,
     KeyCodes.control: Quartz.kCGEventFlagMaskControl,
     KeyCodes.shift: Quartz.kCGEventFlagMaskShift,
+    KeyCodes.right_shift: Quartz.kCGEventFlagMaskShift,
 }
 
 def get_modifier_flags(modifiers=[]):
@@ -155,7 +156,9 @@ class HyperSpace:
         event = Quartz.CGEventCreateKeyboardEvent(None, keys.main, is_down)
         if keys.flags:
             flags = keys.flags
+            print(f"flags before: {flags:#04x}")
             flags |= get_modifier_flags(self.pressed_modifiers)
+            print(f"flags after: {flags:#04x}")
             Quartz.CGEventSetFlags(event, flags)
         Quartz.CGEventSetIntegerValueField(event, Quartz.kCGEventSourceUserData, OUR_EVENT_TAG)
         Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)
