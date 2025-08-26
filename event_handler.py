@@ -29,7 +29,7 @@ class Keys:
         self.main = main
         self.flags = get_modifier_flags(modifiers)
     def __repr__(self):
-        return f"[Keys] {self.main=}, {self.flags=}"
+        return f"[Keys] {self.main=:#04x}, {self.flags=}"
     
 class HyperSpace:
     def __init__(self):
@@ -48,6 +48,10 @@ class HyperSpace:
             KeyCodes.m: Keys(KeyCodes.delete),
             KeyCodes.n: Keys(KeyCodes.delete, [KeyCodes.option]),      # delete a word,
             KeyCodes.b: Keys(KeyCodes.delete, [KeyCodes.command]),    # delete whole line,
+            KeyCodes.comma: Keys(KeyCodes.forward_delete),
+            KeyCodes.period: Keys(KeyCodes.forward_delete, [KeyCodes.option]),
+            KeyCodes.slash: Keys(KeyCodes.forward_delete, [KeyCodes.command]),
+            KeyCodes.k_1: Keys(KeyCodes.f1),
         }
         self.modifier_flags = {
             KeyCodes.command: Quartz.kCGEventFlagMaskCommand,
