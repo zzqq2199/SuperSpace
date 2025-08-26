@@ -180,6 +180,13 @@ class HyperSpace:
             print(f"[set state] {self.state} → {state}")
         self.state = state
         
+        # 更新托盘图标
+        if hasattr(self, 'tray_icon') and self.tray_icon:
+            if state == State.HYPER_MODE:
+                self.tray_icon.set_hyper_icon()
+            else:
+                self.tray_icon.set_idle_icon()
+        
     def to_keys(self, key_code:int|Keys):
         if isinstance(key_code, int):
             return Keys(key_code, [])
