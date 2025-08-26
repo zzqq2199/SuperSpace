@@ -42,7 +42,7 @@ class TrayIcon(AppKit.NSObject):
         menu.addItem_(AppKit.NSMenuItem.separatorItem())
         
         # 添加"退出"菜单项
-        quit_item = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("退出", "terminate:", "q")
+        quit_item = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("退出", "terminate:", "")
         quit_item.setTarget_(AppKit.NSApp)
         menu.addItem_(quit_item)
         
@@ -63,11 +63,35 @@ class TrayIcon(AppKit.NSObject):
     
     def showAbout_(self, sender):
         # 显示关于对话框
-        alert = AppKit.NSAlert.alloc().init()
-        alert.setMessageText_("Space++")
-        alert.setInformativeText_("Space++ 是一个 macOS 键盘快捷键增强工具，将空格键转换为 Hyper 键，提升工作效率。")
-        alert.addButtonWithTitle_("确定")
-        alert.runModal()
+        try:
+            print('show msg')
+            
+            # 创建警告对话框
+            try:
+                # 临时显示Dock图标
+                AppKit.NSApp.setActivationPolicy_(AppKit.NSApplicationActivationPolicyRegular)
+                AppKit.NSApp.activateIgnoringOtherApps_(True)
+                
+                # 创建并显示模态对话框
+                alert = AppKit.NSAlert.alloc().init()
+                alert.setMessageText_("a demo!")
+                alert.setInformativeText_("这是一个Space++的演示版本")
+                alert.addButtonWithTitle_("确定")
+                
+                # 使用无窗口方式显示
+                alert.runModal()
+                
+            finally:
+                # 延迟恢复隐藏状态
+                AppKit.NSApp.performSelector_withObject_afterDelay_(
+                    'setActivationPolicy:',
+                    AppKit.NSApplicationActivationPolicyProhibited,
+                    0.5
+                )
+                AppKit.NSApp.hide_(AppKit.NSApp)
+            
+        except Exception as e:
+            print(f"显示关于对话框时出错: {e}")
 
 class AppDelegate(AppKit.NSObject):
     def init(self):
