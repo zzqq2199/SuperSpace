@@ -62,36 +62,32 @@ class TrayIcon(AppKit.NSObject):
         self.status_item.setImage_(image)
     
     def showAbout_(self, sender):
-        # 显示关于对话框
         try:
-            print('show msg')
+            # 创建宿主窗口
+            host_window = AppKit.NSWindow.alloc().initWithContentRect_styleMask_backing_defer_(
+                AppKit.NSMakeRect(0, 0, 0, 0),
+                AppKit.NSWindowStyleMaskBorderless,
+                AppKit.NSBackingStoreBuffered,
+                False
+            )
+            host_window.setLevel_(AppKit.NSPopUpMenuWindowLevel)
             
-            # 创建警告对话框
-            try:
-                # 临时显示Dock图标
-                AppKit.NSApp.setActivationPolicy_(AppKit.NSApplicationActivationPolicyRegular)
-                AppKit.NSApp.activateIgnoringOtherApps_(True)
-                
-                # 创建并显示模态对话框
-                alert = AppKit.NSAlert.alloc().init()
-                alert.setMessageText_("a demo!")
-                alert.setInformativeText_("这是一个Space++的演示版本")
-                alert.addButtonWithTitle_("确定")
-                
-                # 使用无窗口方式显示
-                alert.runModal()
-                
-            finally:
-                # 延迟恢复隐藏状态
-                AppKit.NSApp.performSelector_withObject_afterDelay_(
-                    'setActivationPolicy:',
-                    AppKit.NSApplicationActivationPolicyProhibited,
-                    0.5
-                )
-                AppKit.NSApp.hide_(AppKit.NSApp)
+            alert = AppKit.NSAlert.alloc().init()
+            alert.setMessageText_("a demo!")
+            alert.setInformativeText_("这是一个Space++的演示版本")
+            alert.addButtonWithTitle_("确定")
+            
+            # 使用sheet方式显示
+            alert.beginSheetModalForWindow_completionHandler_(
+                host_window,
+                lambda return_code: (host_window.orderOut_(None), AppKit.NSApp.stopModalWithCode_(return_code), None)
+            )
+            AppKit.NSApp.runModalForWindow_(host_window)
             
         except Exception as e:
+            import traceback
             print(f"显示关于对话框时出错: {e}")
+            print(traceback.format_exc())
 
 class AppDelegate(AppKit.NSObject):
     def init(self):
@@ -180,6 +176,8 @@ if __name__ == "__main__":
     # 创建应用代理
     delegate = AppDelegate.alloc().init()
     app.setDelegate_(delegate)
+    delegate.tray_icon.showAbout_(None)
+    
     
     # 运行应用
     app.run()
