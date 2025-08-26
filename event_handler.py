@@ -101,8 +101,10 @@ class HyperSpace:
         self.verbose_on_state = False
         self.verbose_on_event = False
         self.verbose_on_action = False
+        self.hold_as_hyper = False
         self.hyper_keys_map = self._load_config()
         self.pressed_modifiers = set()
+        
     
     def _load_config(self):
         """
@@ -118,6 +120,9 @@ class HyperSpace:
             self.verbose_on_state = verbose_config.get('on_state', False)
             self.verbose_on_event = verbose_config.get('on_event', False)
             self.verbose_on_action = verbose_config.get('on_action', False)
+            
+            # Load hold setting
+            self.hold_as_hyper = config.get("hold_as_hyper", False)
                 
             # Load hyper keys mapping
             hyper_keys_map = {}
@@ -228,6 +233,12 @@ class HyperSpace:
             else:
                 return True
         elif self.state == State.ONLY_SPACE_DOWN:
+            if self.hold_as_hyper: # 长按空格，视作Hyper
+                if key_code == KeyCodes.space and is_down: # 长按空格触发连续下发down事件
+                    self.set_state(State.HYPER_MODE)
+                    return False
+            else: # 长按空格，视作连续敲击空格。
+                pass
             if key_code == KeyCodes.space and is_up:
                 self.set_state(State.IDLE)
                 self.press_key(KeyCodes.space)
