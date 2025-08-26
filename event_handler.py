@@ -5,11 +5,12 @@ from key_codes import KeyCodes
 import json
 import os
 import AppKit
+import pkg_resources
 
 OUR_EVENT_TAG = 12345
 
 # Get the directory of the current script
-sCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# sCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Create a mapping from key code to human-readable name
 code_to_name = {}
@@ -111,10 +112,11 @@ class HyperSpace:
         """
         Load configuration from config.json file
         """
-        config_path = os.path.join(sCRIPT_DIR, 'config.json')
         try:
-            with open(config_path, 'r') as f:
-                config = json.load(f)
+            # Use pkg_resources to access config.json
+            
+            config_data = pkg_resources.resource_string('event_handler', 'config.json')
+            config = json.loads(config_data)
                 
             # Load verbose settings
             verbose_config = config.get('verbose', {})
