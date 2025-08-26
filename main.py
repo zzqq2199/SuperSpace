@@ -6,7 +6,7 @@ from event_handler import HyperSpace, OUR_EVENT_TAG
 from key_codes import KeyCodes
 
 # 获取脚本目录
-sCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class TrayIcon(AppKit.NSObject):
     def init(self):
@@ -16,8 +16,8 @@ class TrayIcon(AppKit.NSObject):
         )
         
         # 设置图标
-        self.idle_icon_path = os.path.join(sCRIPT_DIR, 'icons', 'idle_icon.svg')
-        self.hyper_icon_path = os.path.join(sCRIPT_DIR, 'icons', 'hyper_icon.svg')
+        self.idle_icon_path = os.path.join(SCRIPT_DIR, 'icons', 'idle_icon.svg')
+        self.hyper_icon_path = os.path.join(SCRIPT_DIR, 'icons', 'hyper_icon.svg')
         
         # 初始设置为空闲状态图标
         self.set_idle_icon()
@@ -52,13 +52,13 @@ class TrayIcon(AppKit.NSObject):
     def set_idle_icon(self):
         # 设置空闲状态图标
         image = AppKit.NSImage.alloc().initWithContentsOfFile_(self.idle_icon_path)
-        image.setTemplate_(True)  # 使图标适应系统外观
+        image.setTemplate_(False)  # 使图标适应系统外观
         self.status_item.setImage_(image)
     
     def set_hyper_icon(self):
         # 设置Hyper模式图标
         image = AppKit.NSImage.alloc().initWithContentsOfFile_(self.hyper_icon_path)
-        image.setTemplate_(True)  # 使图标适应系统外观
+        image.setTemplate_(False)  # 使图标适应系统外观
         self.status_item.setImage_(image)
     
     def showAbout_(self, sender):

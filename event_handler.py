@@ -195,7 +195,7 @@ class HyperSpace:
 
     def action_key(self, key_code, is_down=True):
         keys = self.to_keys(key_code)
-        if keys.main < KeyCodes.exit: 
+        if keys.main == KeyCodes.exit: 
             # 使用AppKit的应用程序终止机制
             AppKit.NSApp.performSelectorOnMainThread_withObject_waitUntilDone_("terminate:", None, False)
             return
