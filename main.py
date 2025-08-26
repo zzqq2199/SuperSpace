@@ -64,14 +64,23 @@ class TrayIcon(AppKit.NSObject):
     def showAbout_(self, sender):
         try:
             # 创建宿主窗口
+            screen_frame = AppKit.NSScreen.mainScreen().frame()
             host_window = AppKit.NSWindow.alloc().initWithContentRect_styleMask_backing_defer_(
-                AppKit.NSMakeRect(0, 0, 0, 0),
+                AppKit.NSMakeRect(
+                    (screen_frame.size.width - 400)/2,
+                    (screen_frame.size.height - 300)/2,
+                    1,
+                    1
+                ),
                 AppKit.NSWindowStyleMaskBorderless,
                 AppKit.NSBackingStoreBuffered,
                 False
             )
             host_window.setLevel_(AppKit.NSPopUpMenuWindowLevel)
+            host_window.setOpaque_(False)
+            host_window.setBackgroundColor_(AppKit.NSColor.clearColor())
             
+            host_window.setHasShadow_(False)
             alert = AppKit.NSAlert.alloc().init()
             alert.setMessageText_("a demo!")
             alert.setInformativeText_("这是一个Space++的演示版本")
