@@ -44,6 +44,7 @@ class KeyCodes:
     k = 0x28
     semicolon = 0x29  # ;
     backslash = 0x2A  # \
+    comma = 0x2B  # ,
     slash = 0x2C  # /
     n = 0x2D
     m = 0x2E

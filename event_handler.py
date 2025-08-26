@@ -52,6 +52,17 @@ class HyperSpace:
             KeyCodes.period: Keys(KeyCodes.forward_delete, [KeyCodes.option]),
             KeyCodes.slash: Keys(KeyCodes.forward_delete, [KeyCodes.command]),
             KeyCodes.k_1: Keys(KeyCodes.f1),
+            KeyCodes.k_2: Keys(KeyCodes.f2),
+            KeyCodes.k_3: Keys(KeyCodes.f3),
+            KeyCodes.k_4: Keys(KeyCodes.f4),
+            KeyCodes.k_5: Keys(KeyCodes.f5),
+            KeyCodes.k_6: Keys(KeyCodes.f6),
+            KeyCodes.k_7: Keys(KeyCodes.f7),
+            KeyCodes.k_8: Keys(KeyCodes.f8),
+            KeyCodes.k_9: Keys(KeyCodes.f9),
+            KeyCodes.k_0: Keys(KeyCodes.f10),
+            KeyCodes.minus: KeyCodes(KeyCodes.f11),
+            KeyCodes.equal: KeyCodes(KeyCodes.f12)
         }
         self.modifier_flags = {
             KeyCodes.command: Quartz.kCGEventFlagMaskCommand,
@@ -95,7 +106,7 @@ class HyperSpace:
 
     def handle_key_event(self, key_code, is_down, is_modifier):
         is_up = not is_down
-        print(f"{key_code=}, {is_down=}")
+        print(f"{key_code=:#04x}, {is_down=}")
         if self.state == State.IDLE:
             if key_code == KeyCodes.space and is_down:
                 self.set_state(State.ONLY_SPACE_DOWN)
