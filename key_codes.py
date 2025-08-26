@@ -2,6 +2,8 @@
 # Sourced from various online resources and Apple's documentation.
 
 class KeyCodes:
+    # exit key
+    exit = -1
     # --- Alphanumeric Keys ---
     a = 0x00
     s = 0x01

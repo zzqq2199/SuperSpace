@@ -1,5 +1,6 @@
 {
     "hyper_keys_map": {
+        "q": {"key": "exit"},
         "h": {"key": "left_arrow"},
         "j": {"key": "down_arrow"},
         "k": {"key": "up_arrow"},
