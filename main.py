@@ -89,14 +89,15 @@ class TrayIcon(AppKit.NSObject):
             # 使用sheet方式显示
             alert.beginSheetModalForWindow_completionHandler_(
                 host_window,
-                lambda return_code: (host_window.orderOut_(None), AppKit.NSApp.stopModalWithCode_(return_code), None)
+                lambda return_code: (host_window.orderOut_(None), AppKit.NSApp.stopModalWithCode_(return_code)) or None
             )
             AppKit.NSApp.runModalForWindow_(host_window)
             
         except Exception as e:
-            import traceback
-            print(f"显示关于对话框时出错: {e}")
-            print(traceback.format_exc())
+            # import traceback
+            # print(f"显示关于对话框时出错: {e}")
+            # print(traceback.format_exc())
+            pass
 
 class AppDelegate(AppKit.NSObject):
     def init(self):
@@ -185,7 +186,7 @@ if __name__ == "__main__":
     # 创建应用代理
     delegate = AppDelegate.alloc().init()
     app.setDelegate_(delegate)
-    delegate.tray_icon.showAbout_(None)
+    # delegate.tray_icon.showAbout_(None)
     
     
     # 运行应用
