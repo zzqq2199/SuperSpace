@@ -1,129 +1,135 @@
-# Space++ - 增强你的 macOS 键盘体验
+# Space++ - Enhance Your macOS Keyboard Experience
 
-Space++ 是一个轻量级的 macOS 键盘快捷键增强工具，通过将空格键转换为强大的 Hyper 键，让你能够在不离开主键盘区域的情况下执行各种快捷操作，大幅提升工作效率。
+Space++ is a lightweight macOS keyboard shortcut enhancement tool that transforms your spacebar into a powerful Hyper key, allowing you to perform various shortcut operations without leaving the home keyboard area, significantly boosting your productivity.
 
-## ✨ 功能特点
+## ✨ Features
 
-- **高效导航**：使用 `space + h/j/k/l` 代替方向键，实现双手不离主键盘区的光标移动
-- **页面控制**：通过 `space + y/o/u/i` 实现页面首尾和翻页操作
-- **智能编辑**：
-  - `space + m` 删除光标前字符
-  - `space + n` 删除光标前单词（相当于 Option+Delete）
-  - `space + b` 删除整行（相当于 Command+Delete）
-- **功能键映射**：`space + 1-0` 映射为 F1-F10，`space + -/=` 映射为 F11-F12
-- **Esc 键优化**：`space + e` 快速触发 Esc 键，告别远距离伸手
+- **Efficient Navigation**: Use `space + h/j/k/l` instead of arrow keys for cursor movement without leaving the home row
+- **Page Control**: Navigate to beginning/end of page and scroll with `space + y/o/u/i`
+- **Smart Editing**:
+  - `space + m` deletes the character before the cursor
+  - `space + n` deletes the word before the cursor (equivalent to Option+Delete)
+  - `space + b` deletes the entire line (equivalent to Command+Delete)
+- **Function Key Mapping**: `space + 1-0` mapped to F1-F10, `space + -/=` mapped to F11-F12
+- **Esc Key Optimization**: `space + e` quickly triggers the Esc key without reaching far
 
-## 🚀 安装要求
+## 🚀 Requirements
 
-- macOS 系统
-- Python 3.6 或更高版本
-- Quartz 库（pyobjc 提供）
+- macOS system
+- Python 3.6 or higher
+- Quartz library (provided by pyobjc)
 
-## 📦 安装步骤
+## 📦 Installation
 
-1. 克隆项目到本地
+1. Clone the project to your local machine
 ```bash
 git clone https://github.com/yourusername/space++.git
 cd space++
 ```
 
-2. 安装依赖
+2. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-3. 如果没有 requirements.txt 文件，手动安装必要依赖
+3. If there's no requirements.txt file, install the necessary dependencies manually
 ```bash
 pip install pyobjc
 ```
 
-## ▶️ 使用方法
+## ▶️ Usage
 
-1. 运行主程序
+1. Run the main program
 ```bash
 python main.py
 ```
 
-2. 程序会在后台运行，通过 Space 键触发各种快捷功能
+2. The program will run in the background, triggering various shortcut functions via the Space key
 
-3. 要停止程序，可在终端中按 `Ctrl+C` 或关闭终端窗口
+3. To stop the program, press `Ctrl+C` in the terminal or close the terminal window
 
-## 🎯 快捷键映射表
+## 🎯 Keyboard Shortcut Mapping
 
-| 快捷键组合 | 功能 | 等价于 |
-|----------|------|--------|
-| `space + h` | 左箭头 | ← |
-| `space + j` | 下箭头 | ↓ |
-| `space + k` | 上箭头 | ↑ |
-| `space + l` | 右箭头 | → |
-| `space + y` | 到行首 | Home |
-| `space + o` | 到行尾 | End |
-| `space + u` | 向下翻页 | Page Down |
-| `space + i` | 向上翻页 | Page Up |
-| `space + e` | 退出/取消 | Esc |
-| `space + m` | 删除前一个字符 | Delete |
-| `space + n` | 删除前一个单词 | Option+Delete |
-| `space + b` | 删除整行 | Command+Delete |
-| `space + ,` | 删除后一个字符 | Forward Delete |
-| `space + .` | 删除后一个单词 | Option+Forward Delete |
-| `space + /` | 删除到行尾 | Command+Forward Delete |
-| `space + 1-0` | 功能键 F1-F10 | F1-F10 |
-| `space + -` | 功能键 F11 | F11 |
-| `space + =` | 功能键 F12 | F12 |
+| Shortcut Combination | Function | Equivalent To |
+|---------------------|---------|---------------|
+| `space + h` | Left arrow | ← |
+| `space + j` | Down arrow | ↓ |
+| `space + k` | Up arrow | ↑ |
+| `space + l` | Right arrow | → |
+| `space + y` | Move to line start | Home |
+| `space + o` | Move to line end | End |
+| `space + u` | Page down | Page Down |
+| `space + i` | Page up | Page Up |
+| `space + e` | Exit/Cancel | Esc |
+| `space + m` | Delete previous character | Delete |
+| `space + n` | Delete previous word | Option+Delete |
+| `space + b` | Delete entire line | Command+Delete |
+| `space + ,` | Delete next character | Forward Delete |
+| `space + .` | Delete next word | Option+Forward Delete |
+| `space + /` | Delete to end of line | Command+Forward Delete |
+| `space + 1-0` | Function keys F1-F10 | F1-F10 |
+| `space + -` | Function key F11 | F11 |
+| `space + =` | Function key F12 | F12 |
 
-## 📁 项目结构
+## 📁 Project Structure
 
 ```
 space++/
-├── main.py          # 主程序入口，负责事件监听和初始化
-├── event_handler.py # 核心事件处理逻辑，包含状态管理和快捷键映射
-├── key_codes.py     # macOS 键盘按键代码定义
-├── .gitignore       # Git 忽略文件配置
-└── README.md        # 项目说明文档
+├── main.py          # Main program entry, responsible for event listening and initialization
+├── event_handler.py # Core event handling logic, including state management and shortcut mapping
+├── key_codes.py     # macOS keyboard key code definitions
+├── .gitignore       # Git ignore file configuration
+└── README.md        # Project documentation
 ```
 
-## 💻 代码说明
+## 💻 Code Description
 
 ### main.py
-主程序入口文件，负责初始化事件监听器，设置全局快捷键捕获，并将事件转发给 `event_handler` 处理。
+The main program entry file, responsible for initializing the event listener, setting up global shortcut capture, and forwarding events to the `event_handler` for processing.
 
 ### event_handler.py
-包含核心的事件处理逻辑，定义了 `HyperSpace` 类来管理不同的按键状态和处理快捷键映射。主要功能包括：
-- 状态管理（IDLE、ONLY_SPACE_DOWN、SPACE_NORM_DOWN、HYPER_MODE）
-- 快捷键映射表定义
-- 按键模拟和事件触发
+Contains the core event handling logic, defining the `HyperSpace` class to manage different key states and handle shortcut mappings. Main features include:
+- State management (IDLE, ONLY_SPACE_DOWN, SPACE_NORM_DOWN, HYPER_MODE)
+- Shortcut mapping table definition
+- Key simulation and event triggering
 
 ### key_codes.py
-定义了 macOS 键盘按键的虚拟键码（Virtual Key Codes），以 `KeyCodes` 类的形式提供了便捷的访问方式，使代码更加可读和易于维护。
+Defines the virtual key codes for macOS keyboard keys, providing convenient access in the form of the `KeyCodes` class, making the code more readable and maintainable.
 
-## ⚙️ 自定义配置
+## ⚙️ Custom Configuration
 
-如需添加或修改快捷键映射，可以编辑 `event_handler.py` 文件中的 `hyper_keys_map` 字典，添加新的键码映射关系：
+To add or modify shortcut mappings, you can edit the `hyper_keys_map` dictionary in the `event_handler.py` file to add new key code mappings:
 
 ```python
 self.hyper_keys_map = {
     KeyCodes.h: Keys(KeyCodes.left_arrow),
-    # 添加自定义映射...
+    # Add custom mappings...
 }
 ```
 
-## ⚠️ 注意事项
+## ⚠️ Notes
 
-1. 程序需要获取系统级键盘事件权限，请在运行时按照系统提示授予权限
-2. 部分应用可能会拦截或覆盖这些快捷键
-3. 在某些全屏应用中，快捷键可能无法正常工作
-4. 如果遇到权限问题，可以尝试在 "系统偏好设置 > 安全性与隐私 > 隐私 > 输入监控" 中手动添加终端或 Python
+1. The program requires system-level keyboard event permissions. Please grant permissions as prompted by the system during runtime
+2. Some applications may intercept or override these shortcuts
+3. Shortcuts may not work properly in certain full-screen applications
+4. If you encounter permission issues, you can manually add Terminal or Python in "System Preferences > Security & Privacy > Privacy > Input Monitoring"
 
-## 🤝 贡献指南
+## 📝 TODO
 
-欢迎提交 Issue 和 Pull Request 来帮助改进这个项目！
+1. [ ] Convert configuration to JSON/YAML format for easier usage
+2. [ ] Map Home/End keys to cmd+←/→
+3. [ ] Add option to customize the behavior when holding the spacebar alone
 
-## 📄 许可证
+## 🤝 Contribution Guide
 
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
+Contributions are welcome! Please submit Issues and Pull Requests to help improve this project.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
 ---
 
 Made with ❤️ for macOS power users
 
-*提升你的键盘效率，从 Space++ 开始！*
+*Enhance your keyboard efficiency with Space++!*
