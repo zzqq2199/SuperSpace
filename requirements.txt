@@ -1,0 +1,9 @@
+# Space++ 项目依赖包
+pyobjc>=8.0.0
+
+# 说明：
+# - pyobjc 是访问 macOS 系统 API（包括 Quartz）的必要库
+# - 版本要求 8.0.0 或更高，以确保兼容性
+
+# 安装命令：
+# pip install -r requirements.txt
