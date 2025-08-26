@@ -1,5 +1,6 @@
 # Space++ 项目依赖包
 pyobjc>=8.0.0
+py2app
 
 # 说明：
 # - pyobjc 是访问 macOS 系统 API（包括 Quartz）的必要库
