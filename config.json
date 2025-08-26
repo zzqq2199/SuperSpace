@@ -27,5 +27,10 @@
         "k_0": {"key": "f10"},
         "minus": {"key": "f11"},
         "equal": {"key": "f12"}
+    },
+    "verbose": {
+        "on_state": true,
+        "on_event": true,
+        "on_action": true
     }
 }

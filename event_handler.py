@@ -98,18 +98,28 @@ class HyperSpace:
     def __init__(self):
         self.state = State.IDLE
         self.candidate_key = None
-        self.hyper_keys_map = self._load_hyper_keys_map()
+        self.verbose_on_state = False
+        self.verbose_on_event = False
+        self.verbose_on_action = False
+        self.hyper_keys_map = self._load_config()
         self.pressed_modifiers = set()
     
-    def _load_hyper_keys_map(self):
+    def _load_config(self):
         """
-        Load hyper keys mapping from config.json file
+        Load configuration from config.json file
         """
         config_path = os.path.join(sCRIPT_DIR, 'config.json')
         try:
             with open(config_path, 'r') as f:
                 config = json.load(f)
                 
+            # Load verbose settings
+            verbose_config = config.get('verbose', {})
+            self.verbose_on_state = verbose_config.get('on_state', False)
+            self.verbose_on_event = verbose_config.get('on_event', False)
+            self.verbose_on_action = verbose_config.get('on_action', False)
+                
+            # Load hyper keys mapping
             hyper_keys_map = {}
             for source_key_name, target_key_info in config.get('hyper_keys_map', {}).items():
                 # Get source key code
@@ -147,6 +157,13 @@ class HyperSpace:
                 KeyCodes.k: Keys(KeyCodes.up_arrow),
                 KeyCodes.l: Keys(KeyCodes.right_arrow),
             }
+            
+    def _load_hyper_keys_map(self):
+        """
+        Load hyper keys mapping from config.json file
+        This method is kept for backward compatibility
+        """
+        return self._load_config()
     def get_mapped_key(self, keycode:int)->Keys:
         if keycode in self.hyper_keys_map:
             return self.hyper_keys_map
@@ -154,7 +171,8 @@ class HyperSpace:
             return Keys(keycode)
 
     def set_state(self, state):
-        print(f"[set state] {self.state} → {state}")
+        if self.verbose_on_state:
+            print(f"[set state] {self.state} → {state}")
         self.state = state
         
     def to_keys(self, key_code:int|Keys):
@@ -174,13 +192,12 @@ class HyperSpace:
         # Get main key name
         main_name = code_to_name.get(keys.main, f'Unknown(0x{keys.main:02x})')
         
-        print(f"simulated key: {keys}, pressed modifiers: {', '.join(pressed_mod_names) if pressed_mod_names else 'none'}, {'down' if is_down else 'up'}")
+        print(f"[action] {keys=}, pressed modifiers: {', '.join(pressed_mod_names) if pressed_mod_names else 'none'}, {'down' if is_down else 'up'}")
         event = Quartz.CGEventCreateKeyboardEvent(None, keys.main, is_down)
-        if keys.flags:
+        # if keys.flags:
+        if True:
             flags = keys.flags
-            print(f"flags before: {flags:#04x}")
             flags |= get_modifier_flags(self.pressed_modifiers)
-            print(f"flags after: {flags:#04x}")
             Quartz.CGEventSetFlags(event, flags)
         Quartz.CGEventSetIntegerValueField(event, Quartz.kCGEventSourceUserData, OUR_EVENT_TAG)
         Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)
@@ -197,7 +214,8 @@ class HyperSpace:
 
     def handle_key_event(self, key_code, is_down, is_modifier):
         is_up = not is_down
-        print(f"{key_code=:#04x}, {is_down=}, {is_modifier=}")
+        if self.verbose_on_event:
+            print(f"[handle_key_event] {key_code=:#04x}, {is_down=}, {is_modifier=}")
         if is_modifier:
             if is_down:
                 self.pressed_modifiers.add(key_code)
