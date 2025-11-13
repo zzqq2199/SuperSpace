@@ -241,7 +241,9 @@ class HyperSpace:
             else:
                 self.pressed_modifiers.discard(key_code)
         if self.state == State.IDLE:
-            if key_code == KeyCodes.space and is_down:
+            if len(self.pressed_modifiers) > 0:
+                return True
+            elif key_code == KeyCodes.space and is_down:
                 self.set_state(State.ONLY_SPACE_DOWN)
                 return False
             else:
