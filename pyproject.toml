@@ -5,8 +5,12 @@ description = "Space++ macOS 键盘快捷键增强工具"
 readme = "README.md"
 requires-python = ">=3.6"
 dependencies = [
-  "pyobjc>=8.0.0",
+  "pyobjc-core>=8.0.0",
+  "pyobjc-framework-Cocoa>=8.0.0",
+  "pyobjc-framework-Quartz>=8.0.0",
+  "pyobjc-framework-ScriptingBridge>=8.0.0",
   "py2app",
+  "pyinstaller",
 ]
 
 [tool.uv]
