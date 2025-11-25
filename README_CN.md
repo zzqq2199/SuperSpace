@@ -29,19 +29,15 @@ cd space++
 
 2. 安装依赖
 ```bash
-pip install -r requirements.txt
-```
-
-3. 如果没有 requirements.txt 文件，手动安装必要依赖
-```bash
-pip install pyobjc
+uv venv
+uv sync
 ```
 
 ## ▶️ 使用方法
 
 1. 运行主程序
 ```bash
-python main.py
+uv run python main.py
 ```
 
 2. 程序会在后台运行，通过 Space 键触发各种快捷功能

@@ -29,19 +29,15 @@ cd space++
 
 2. Install dependencies
 ```bash
-pip install -r requirements.txt
-```
-
-3. If there's no requirements.txt file, install the necessary dependencies manually
-```bash
-pip install pyobjc
+uv venv
+uv sync
 ```
 
 ## ▶️ Usage
 
 1. Run the main program
 ```bash
-python main.py
+uv run python main.py
 ```
 
 2. The program will run in the background, triggering various shortcut functions via the Space key
