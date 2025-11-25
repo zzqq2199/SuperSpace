@@ -123,6 +123,13 @@ self.hyper_keys_map = {
 Made with ❤️ for macOS power users
 
 *提升你的键盘效率，从 Space++ 开始！*
+
+## 📝 版本更新
+
+### 1.1.0
+- 状态栏“退出”菜单项启用并可正常退出应用
+- 补充打包注意事项：临时签名、权限弹窗与日志
+- 以 `.app` 运行时，日志重定向到 `/tmp/spacepp.out`
 ## 📦 打包为 mac 应用
 
 1. 确认已安装 uv

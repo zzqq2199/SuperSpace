@@ -58,8 +58,9 @@ class TrayIcon(AppKit.NSObject):
         menu.addItem_(AppKit.NSMenuItem.separatorItem())
         
         # 添加"退出"菜单项
-        quit_item = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("退出", "terminate:", "")
-        quit_item.setTarget_(AppKit.NSApp)
+        quit_item = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("退出", "quit:", "")
+        quit_item.setTarget_(self)
+        quit_item.setEnabled_(True)
         menu.addItem_(quit_item)
         
         # 设置菜单
@@ -113,6 +114,12 @@ class TrayIcon(AppKit.NSObject):
             # import traceback
             # print(f"显示关于对话框时出错: {e}")
             # print(traceback.format_exc())
+            pass
+
+    def quit_(self, sender):
+        try:
+            AppKit.NSApp.terminate_(self)
+        except Exception:
             pass
 
 class AppDelegate(AppKit.NSObject):

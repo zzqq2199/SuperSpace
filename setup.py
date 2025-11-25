@@ -9,7 +9,7 @@ OPTIONS = {
     "plist": {
         "CFBundleName": "SpacePP",
         "CFBundleIdentifier": "com.local.spacepp",
-        "CFBundleVersion": "0.1.0",
+        "CFBundleVersion": "1.1.0",
         "LSUIElement": True,
         "NSHighResolutionCapable": True,
     },

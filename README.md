@@ -129,6 +129,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Made with ❤️ for macOS power users
 
 *Enhance your keyboard efficiency with Space++!*
+
+## 📝 Changelog
+
+### 1.1.0
+- Status bar “Quit” menu item enabled and wired to terminate the app
+- Packaging notes updated: ad-hoc signing, permission prompts, and logs
+- App logs redirected to `/tmp/spacepp.out` when running as `.app`
 ## 📦 Packaging (macOS App)
 
 1. Ensure uv is installed
