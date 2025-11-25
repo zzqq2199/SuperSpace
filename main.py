@@ -7,6 +7,22 @@ from key_codes import KeyCodes
 
 # 获取脚本目录
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+try:
+    os.environ['SPACEPP_CONFIG'] = os.path.join(SCRIPT_DIR, 'config.json')
+except Exception:
+    pass
+
+def _redirect_output_if_app():
+    try:
+        if getattr(sys, "frozen", False) or hasattr(sys, "_MEIPASS") or "Contents/MacOS" in sys.executable:
+            f = open("/tmp/spacepp.out", "a", buffering=1)
+            sys.stdout = f
+            sys.stderr = f
+            print("[SpacePP] start pid=", os.getpid())
+    except Exception:
+        pass
+
+_redirect_output_if_app()
 
 class TrayIcon(AppKit.NSObject):
     def init(self):
@@ -186,6 +202,11 @@ if __name__ == "__main__":
     # 创建应用代理
     delegate = AppDelegate.alloc().init()
     app.setDelegate_(delegate)
+    try:
+        if hasattr(delegate, 'hyper_space') and hasattr(delegate.hyper_space, 'config_path'):
+            print("[SpacePP] config path:", delegate.hyper_space.config_path)
+    except Exception:
+        pass
     # delegate.tray_icon.showAbout_(None)
     
     

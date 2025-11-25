@@ -149,8 +149,40 @@ open dist/SpacePP.app
 - 首次运行会提示授予“辅助功能/输入监控”权限；请在系统设置中授权以启用键盘事件捕获。
 - 应用会在状态栏显示图标；按照代码设置（`NSApplicationActivationPolicyProhibited`），不会显示 Dock 图标。
 
+日志
+- 以 .app 运行时，标准输出/错误会重定向到 `/tmp/spacepp.out`。
+
 可选：使用 py2app（可能与 uv 提供的 Python 的 zlib 不兼容）
 ```bash
 uv run -p 3.12 python setup.py py2app
 ```
 如遇到 `zlib.__file__` 错误，建议改用上面的 PyInstaller 方案。
+
+### ⚠️ macOS 权限与签名注意事项
+
+- 弹窗提示
+  - 使用 `open dist/SpacePP.app` 更容易触发系统权限弹窗（不要直接运行 `Contents/MacOS/SpacePP`）。
+  - 首次运行需要授权：系统设置 → 隐私与安全性 → 辅助功能、输入监控。
+
+- 授权步骤
+  - 在这两个页面通过“+”添加 `dist/SpacePP.app`，并打开开关。
+
+- 临时签名（ad-hoc）以增强识别稳定性
+```bash
+codesign --force --deep --sign - dist/SpacePP.app
+codesign -vvv --deep dist/SpacePP.app
+```
+
+- 重打包导致授权失效
+  - 每次重新构建 `.app` 可能改变路径/签名；如果授权开关无法开启或不生效，删除旧条目后重新添加新的 `SpacePP.app`。
+  - 可选重置（会影响所有应用，谨慎执行）：
+```bash
+tccutil reset Accessibility
+tccutil reset InputMonitoring
+```
+
+- 日志
+  - 以 .app 运行时，标准输出/错误重定向到 `/tmp/spacepp.out`。可用于验证启动与配置路径：
+```bash
+tail -n 100 /tmp/spacepp.out
+```

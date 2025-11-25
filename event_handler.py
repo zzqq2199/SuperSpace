@@ -5,7 +5,7 @@ from key_codes import KeyCodes
 import json
 import os
 import AppKit
-import pkg_resources
+import sys
 
 OUR_EVENT_TAG = 12345
 
@@ -97,26 +97,45 @@ class Keys:
             return f"[Keys] {main_name}"
     
 class HyperSpace:
-    def __init__(self):
+    def __init__(self, config_path: str | None = None):
         self.state = State.IDLE
         self.candidate_key = None
         self.verbose_on_state = False
         self.verbose_on_event = False
         self.verbose_on_action = False
         self.hold_as_hyper = False
-        self.hyper_keys_map = self._load_config()
+        self.hyper_keys_map = self._load_config() if config_path is None else self._load_config_from_path(config_path)
         self.pressed_modifiers = set()
         
     
+    def _resolve_config_path(self):
+        env_cfg = os.environ.get('SPACEPP_CONFIG')
+        if env_cfg and os.path.exists(env_cfg):
+            return env_cfg
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        candidates = [
+            os.path.join(base_dir, 'config.json'),
+        ]
+        if getattr(sys, 'frozen', False) or 'Contents/MacOS' in sys.executable or hasattr(sys, '_MEIPASS'):
+            app_root = os.path.abspath(os.path.join(os.path.dirname(sys.executable), '..'))
+            candidates.append(os.path.join(app_root, 'Resources', 'config.json'))
+            candidates.append(os.path.join(app_root, 'Resources', 'Resources', 'config.json'))
+            candidates.append(os.path.join(app_root, 'Frameworks', 'config.json'))
+        candidates.append(os.path.join(os.getcwd(), 'config.json'))
+        for p in candidates:
+            if os.path.exists(p):
+                return p
+        return candidates[0]
+
     def _load_config(self):
         """
         Load configuration from config.json file
         """
         try:
-            # Use pkg_resources to access config.json
-            
-            config_data = pkg_resources.resource_string('event_handler', 'config.json')
-            config = json.loads(config_data)
+            config_path = self._resolve_config_path()
+            self.config_path = config_path
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
                 
             # Load verbose settings
             verbose_config = config.get('verbose', {})
@@ -159,6 +178,41 @@ class HyperSpace:
         except Exception as e:
             print(f"Error loading config.json: {e}")
             # Return a minimal fallback mapping if config file can't be loaded
+            return {
+                KeyCodes.h: Keys(KeyCodes.left_arrow),
+                KeyCodes.j: Keys(KeyCodes.down_arrow),
+                KeyCodes.k: Keys(KeyCodes.up_arrow),
+                KeyCodes.l: Keys(KeyCodes.right_arrow),
+            }
+
+    def _load_config_from_path(self, config_path: str):
+        try:
+            self.config_path = config_path
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            verbose_config = config.get('verbose', {})
+            self.verbose_on_state = verbose_config.get('on_state', False)
+            self.verbose_on_event = verbose_config.get('on_event', False)
+            self.verbose_on_action = verbose_config.get('on_action', False)
+            self.hold_as_hyper = config.get("hold_as_hyper", False)
+            hyper_keys_map = {}
+            for source_key_name, target_key_info in config.get('hyper_keys_map', {}).items():
+                source_key_code = getattr(KeyCodes, source_key_name, None)
+                if source_key_code is None:
+                    continue
+                target_key_name = target_key_info.get('key')
+                target_key_code = getattr(KeyCodes, target_key_name, None)
+                if target_key_code is None:
+                    continue
+                modifiers = []
+                for mod_name in target_key_info.get('modifiers', []):
+                    mod_code = getattr(KeyCodes, mod_name, None)
+                    if mod_code is not None:
+                        modifiers.append(mod_code)
+                hyper_keys_map[source_key_code] = Keys(target_key_code, modifiers)
+            return hyper_keys_map
+        except Exception as e:
+            print(f"Error loading config.json: {e}")
             return {
                 KeyCodes.h: Keys(KeyCodes.left_arrow),
                 KeyCodes.j: Keys(KeyCodes.down_arrow),

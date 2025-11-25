@@ -155,8 +155,40 @@ open dist/SpacePP.app
 - First run will prompt for Accessibility/Input Monitoring permissions. Grant them in System Settings to enable keyboard event capture.
 - The status bar icon should appear; the app runs without a Dock icon per `NSApplicationActivationPolicyProhibited`.
 
+Logs
+- When running as an app bundle, stdout/stderr are redirected to `/tmp/spacepp.out`.
+
 Optional: py2app (may be incompatible with uv’s Python zlib)
 ```bash
 uv run -p 3.12 python setup.py py2app
 ```
 If you encounter a `zlib.__file__` error, prefer the PyInstaller method above.
+
+### ⚠️ macOS Permissions & Signing Notes
+
+- Permission prompts
+  - Launch with `open dist/SpacePP.app` to trigger macOS prompts more reliably (not `Contents/MacOS/SpacePP`).
+  - First run requires enabling: System Settings → Privacy & Security → Accessibility, and Input Monitoring.
+
+- Granting permissions
+  - Add `dist/SpacePP.app` via the “+” button and turn the toggle on under both Accessibility and Input Monitoring.
+
+- Ad-hoc signing for stability
+```bash
+codesign --force --deep --sign - dist/SpacePP.app
+codesign -vvv --deep dist/SpacePP.app
+```
+
+- Rebuilds invalidate permissions
+  - Each rebuild can change path/signature; if the toggle won’t stick, remove the old entry then re-add the new app.
+  - Optional reset (affects all apps; use with care):
+```bash
+tccutil reset Accessibility
+tccutil reset InputMonitoring
+```
+
+- Logs
+  - App bundle redirects stdout/stderr to `/tmp/spacepp.out`. Tail it to verify startup and config path:
+```bash
+tail -n 100 /tmp/spacepp.out
+```
