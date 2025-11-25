@@ -193,3 +193,24 @@ tccutil reset InputMonitoring
 ```bash
 tail -n 100 /tmp/spacepp.out
 ```
+
+### 🖼️ 应用图标生成
+
+- 推荐依赖（获得清晰矢量渲染）
+  - `brew install librsvg`
+
+- 从 `icons/hyper_icon.svg` 生成图标系列和 .icns
+```bash
+uv run -p 3.12 python scripts/generate_icon.py
+```
+  - 产物：
+    - PNG：`icons/SpacePP.iconset/icon_128x128.png`、`icon_256x256.png`、`icon_512x512.png` 及各自的 `@2x`
+    - ICNS：`icons/spacepp.icns`
+
+- 使用生成的图标重新打包
+```bash
+uv run -p 3.12 pyinstaller --noconfirm SpacePP.spec
+open dist/SpacePP.app
+```
+  - PyInstaller 通过 `SpacePP.spec` 引用 `icons/spacepp.icns`
+  - 若用 py2app 构建，`setup.py` 已设置 `iconfile` 与 `CFBundleIconFile`

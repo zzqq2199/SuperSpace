@@ -45,6 +45,6 @@ coll = COLLECT(
 app = BUNDLE(
     coll,
     name='SpacePP.app',
-    icon=None,
+    icon='icons/spacepp.icns',
     bundle_identifier=None,
 )
