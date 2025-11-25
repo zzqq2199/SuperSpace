@@ -129,3 +129,34 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Made with ❤️ for macOS power users
 
 *Enhance your keyboard efficiency with Space++!*
+## 📦 Packaging (macOS App)
+
+1. Ensure uv is installed
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+2. Create env and install deps
+```bash
+uv venv
+uv sync
+```
+
+3. Build the app bundle with PyInstaller
+```bash
+uv run -p 3.12 pyinstaller --windowed --noconfirm --name SpacePP main.py --add-data icons:icons
+```
+
+4. Run the app
+```bash
+open dist/SpacePP.app
+```
+
+- First run will prompt for Accessibility/Input Monitoring permissions. Grant them in System Settings to enable keyboard event capture.
+- The status bar icon should appear; the app runs without a Dock icon per `NSApplicationActivationPolicyProhibited`.
+
+Optional: py2app (may be incompatible with uv’s Python zlib)
+```bash
+uv run -p 3.12 python setup.py py2app
+```
+If you encounter a `zlib.__file__` error, prefer the PyInstaller method above.

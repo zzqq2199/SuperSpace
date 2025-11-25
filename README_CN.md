@@ -123,3 +123,34 @@ self.hyper_keys_map = {
 Made with ❤️ for macOS power users
 
 *提升你的键盘效率，从 Space++ 开始！*
+## 📦 打包为 mac 应用
+
+1. 确认已安装 uv
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+2. 创建虚拟环境并安装依赖
+```bash
+uv venv
+uv sync
+```
+
+3. 使用 PyInstaller 构建 .app（无交互确认）
+```bash
+uv run -p 3.12 pyinstaller --windowed --noconfirm --name SpacePP main.py --add-data icons:icons
+```
+
+4. 运行应用
+```bash
+open dist/SpacePP.app
+```
+
+- 首次运行会提示授予“辅助功能/输入监控”权限；请在系统设置中授权以启用键盘事件捕获。
+- 应用会在状态栏显示图标；按照代码设置（`NSApplicationActivationPolicyProhibited`），不会显示 Dock 图标。
+
+可选：使用 py2app（可能与 uv 提供的 Python 的 zlib 不兼容）
+```bash
+uv run -p 3.12 python setup.py py2app
+```
+如遇到 `zlib.__file__` 错误，建议改用上面的 PyInstaller 方案。
