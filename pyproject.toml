@@ -1,6 +1,7 @@
 [project]
 name = "spacepp"
-version = "0.1.0"
+version = "1.0.0"
+author = "Quan Zhou"
 description = "Space++ macOS 键盘快捷键增强工具"
 readme = "README.md"
 requires-python = ">=3.6"
