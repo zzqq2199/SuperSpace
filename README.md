@@ -199,3 +199,24 @@ tccutil reset InputMonitoring
 ```bash
 tail -n 100 /tmp/spacepp.out
 ```
+
+### 🖼️ App Icon Generation
+
+- Requirements (recommended for sharp rendering)
+  - `brew install librsvg`
+
+- Generate iconset and .icns from `icons/hyper_icon.svg`
+```bash
+uv run -p 3.12 python scripts/generate_icon.py
+```
+  - Outputs:
+    - PNGs: `icons/SpacePP.iconset/icon_128x128.png`, `icon_256x256.png`, `icon_512x512.png` and `@2x` variants
+    - ICNS: `icons/spacepp.icns`
+
+- Rebuild the app with the custom icon
+```bash
+uv run -p 3.12 pyinstaller --noconfirm SpacePP.spec
+open dist/SpacePP.app
+```
+  - PyInstaller uses `icons/spacepp.icns` via `SpacePP.spec`
+  - If building with py2app: `setup.py` sets `iconfile` and `CFBundleIconFile`
