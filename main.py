@@ -143,9 +143,21 @@ class AppDelegate(AppKit.NSObject):
         
         # 设置事件监听
         self.setup_event_tap()
+        self._register_workspace_notifications()
     
     def setup_event_tap(self):
+        if self.event_tap:
+            try:
+                Quartz.CGEventTapEnable(self.event_tap, False)
+            except Exception:
+                pass
         def event_callback(proxy, type, event, refcon):
+            if type in [Quartz.kCGEventTapDisabledByTimeout, Quartz.kCGEventTapDisabledByUserInput]:
+                try:
+                    Quartz.CGEventTapEnable(self.event_tap, True)
+                except Exception:
+                    pass
+                return None
             if Quartz.CGEventGetIntegerValueField(event, Quartz.kCGEventSourceUserData) == OUR_EVENT_TAG:
                 return event
             
@@ -195,6 +207,39 @@ class AppDelegate(AppKit.NSObject):
         run_loop_source = Quartz.CFMachPortCreateRunLoopSource(None, self.event_tap, 0)
         Quartz.CFRunLoopAddSource(Quartz.CFRunLoopGetCurrent(), run_loop_source, Quartz.kCFRunLoopCommonModes)
         Quartz.CGEventTapEnable(self.event_tap, True)
+        print("[SpacePP] event tap ready")
+    
+    def _register_workspace_notifications(self):
+        try:
+            nc = AppKit.NSWorkspace.sharedWorkspace().notificationCenter()
+            nc.addObserver_selector_name_object_(self, "workspaceDidWake:", AppKit.NSWorkspaceDidWakeNotification, None)
+            nc.addObserver_selector_name_object_(self, "workspaceWillSleep:", AppKit.NSWorkspaceWillSleepNotification, None)
+            if hasattr(AppKit, "NSWorkspaceSessionDidBecomeActiveNotification"):
+                nc.addObserver_selector_name_object_(self, "workspaceSessionActive:", AppKit.NSWorkspaceSessionDidBecomeActiveNotification, None)
+        except Exception:
+            pass
+
+    def workspaceWillSleep_(self, notification):
+        try:
+            if self.event_tap:
+                Quartz.CGEventTapEnable(self.event_tap, False)
+                print("[SpacePP] event tap disabled (sleep)")
+        except Exception:
+            pass
+
+    def workspaceDidWake_(self, notification):
+        try:
+            print("[SpacePP] wake detected, reinitializing event tap")
+            self.setup_event_tap()
+        except Exception:
+            pass
+
+    def workspaceSessionActive_(self, notification):
+        try:
+            print("[SpacePP] session active, reinitializing event tap")
+            self.setup_event_tap()
+        except Exception:
+            pass
     
     def applicationShouldTerminate_(self, sender):
         # 清理资源
