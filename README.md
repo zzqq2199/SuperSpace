@@ -131,6 +131,10 @@ Made with ❤️ for macOS power users
 
 ## 📝 Changelog
 
+### 2.0.0
+- Added the current app or script directory to About, with one-click path copying
+- Added long-lived local signing and a two-Mac distribution workflow
+
 ### 1.1.1
 - Updated the About dialog with the app description, version, and copyright
 - Added a disabled “Current Version” tray-menu item for quick build verification
@@ -146,24 +150,45 @@ Made with ❤️ for macOS power users
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-2. Create env and install deps
+2. Before the first build, create and import a long-lived local signing certificate
 ```bash
-uv venv
-uv sync
+./scripts/setup_local_signing.sh
 ```
 
-3. Build the app bundle with PyInstaller
+The private key and backup are stored in the Git-ignored `.signing/` directory. Back them up securely; never commit or share the `.key`, `.p12`, or password file.
+
+3. Run the packaging script
 ```bash
-uv run -p 3.12 pyinstaller --windowed --noconfirm --name SpacePP main.py --add-data icons:icons
+./scripts/build_app.sh --clean
 ```
 
-4. Run the app
+The script installs locked dependencies, invokes PyInstaller, checks resources and version metadata, and applies and verifies the stable local signature. To launch the app after a successful build:
+```bash
+./scripts/build_app.sh --open
+```
+
+4. Launch the app manually
 ```bash
 open dist/SpacePP.app
 ```
 
 - First run will prompt for Accessibility/Input Monitoring permissions. Grant them in System Settings to enable keyboard event capture.
 - The status bar icon should appear; the app runs without a Dock icon per `NSApplicationActivationPolicyProhibited`.
+
+### Using the app on another Mac
+
+Copy the generated `dist/SpacePP-<version>-macos-<architecture>.zip` to the other Mac and extract it. The archive contains the app, public certificate, and trust helper.
+
+Then run:
+
+```bash
+cd SpacePP-<version>-macos-<architecture>
+./trust_signing_certificate.sh ./spacepp-local-signing.crt
+cp -R SpacePP.app /Applications/
+open /Applications/SpacePP.app
+```
+
+The second Mac must grant Accessibility and Input Monitoring permissions separately. As long as later builds use the same certificate and bundle identifier, the app keeps a stable signing identity across updates.
 
 Logs
 - When running as an app bundle, stdout/stderr are redirected to `/tmp/spacepp.out`.
@@ -179,18 +204,19 @@ If you encounter a `zlib.__file__` error, prefer the PyInstaller method above.
 - Permission prompts
   - Launch with `open dist/SpacePP.app` to trigger macOS prompts more reliably (not `Contents/MacOS/SpacePP`).
   - First run requires enabling: System Settings → Privacy & Security → Accessibility, and Input Monitoring.
+  - Without permission, the app keeps its tray icon, shows guidance, and retries automatically; no restart is needed after granting access.
 
 - Granting permissions
   - Add `dist/SpacePP.app` via the “+” button and turn the toggle on under both Accessibility and Input Monitoring.
 
-- Ad-hoc signing for stability
+- Sign and verify with the long-lived local certificate
 ```bash
-codesign --force --deep --sign - dist/SpacePP.app
-codesign -vvv --deep dist/SpacePP.app
+./scripts/build_app.sh
+codesign --verify --deep --strict --verbose=2 dist/SpacePP.app
 ```
 
 - Rebuilds invalidate permissions
-  - Each rebuild can change path/signature; if the toggle won’t stick, remove the old entry then re-add the new app.
+  - Reusing the same local certificate keeps the signing identity stable. Changing the certificate or app path may require removing and re-adding the permission entry.
   - Optional reset (affects all apps; use with care):
 ```bash
 tccutil reset Accessibility
@@ -205,7 +231,7 @@ tail -n 100 /tmp/spacepp.out
 
 ### 🖼️ App Icon Generation
 
-- Requirements (recommended for sharp rendering)
+- Required dependency (ensures correct rendering at every icon size)
   - `brew install librsvg`
 
 - Generate iconset and .icns from `icons/hyper_icon.svg`

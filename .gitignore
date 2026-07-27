@@ -100,3 +100,6 @@ temp/
 # Ascend 
 fusion_result.json
 kernel_meta
+
+# Local code-signing private key and certificate backup
+.signing/

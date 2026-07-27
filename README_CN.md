@@ -131,6 +131,10 @@ Made with ❤️ for macOS power users
 
 ## 📝 版本更新
 
+### 2.0.0
+- “关于 Space++”新增当前 App 或脚本目录，并支持一键复制路径
+- 增加长期本地签名和双 Mac 分发流程
+
 ### 1.1.1
 - 更新“关于 Space++”弹窗，展示应用简介、版本和版权信息
 - 托盘菜单新增不可点击的“当前版本”项，方便确认正在运行的构建
@@ -146,24 +150,45 @@ Made with ❤️ for macOS power users
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-2. 创建虚拟环境并安装依赖
+2. 首次打包前，生成并导入长期有效的本地签名证书
 ```bash
-uv venv
-uv sync
+./scripts/setup_local_signing.sh
 ```
 
-3. 使用 PyInstaller 构建 .app（无交互确认）
+证书私钥及备份保存在被 Git 忽略的 `.signing/` 目录。请妥善备份，不要提交或分享 `.key`、`.p12` 和密码文件。
+
+3. 运行一键打包脚本
 ```bash
-uv run -p 3.12 pyinstaller --windowed --noconfirm --name SpacePP main.py --add-data icons:icons
+./scripts/build_app.sh --clean
 ```
 
-4. 运行应用
+脚本会自动安装锁定的依赖、调用 PyInstaller、检查资源和版本号，并应用及验证稳定的本地签名。若希望构建成功后立即启动：
+```bash
+./scripts/build_app.sh --open
+```
+
+4. 手动运行应用
 ```bash
 open dist/SpacePP.app
 ```
 
 - 首次运行会提示授予“辅助功能/输入监控”权限；请在系统设置中授权以启用键盘事件捕获。
 - 应用会在状态栏显示图标；按照代码设置（`NSApplicationActivationPolicyProhibited`），不会显示 Dock 图标。
+
+### 在另一台 Mac 上使用
+
+将打包脚本生成的 `dist/SpacePP-<版本>-macos-<架构>.zip` 复制到另一台 Mac 并解压。压缩包中包含 App、公开证书和信任脚本。
+
+然后执行：
+
+```bash
+cd SpacePP-<版本>-macos-<架构>
+./trust_signing_certificate.sh ./spacepp-local-signing.crt
+cp -R SpacePP.app /Applications/
+open /Applications/SpacePP.app
+```
+
+第二台 Mac 仍需单独授予“辅助功能”和“输入监控”权限。只要后续构建继续使用同一张证书和 Bundle ID，更新 App 时签名身份保持稳定。
 
 日志
 - 以 .app 运行时，标准输出/错误会重定向到 `/tmp/spacepp.out`。
@@ -179,18 +204,19 @@ uv run -p 3.12 python setup.py py2app
 - 弹窗提示
   - 使用 `open dist/SpacePP.app` 更容易触发系统权限弹窗（不要直接运行 `Contents/MacOS/SpacePP`）。
   - 首次运行需要授权：系统设置 → 隐私与安全性 → 辅助功能、输入监控。
+  - 权限不足时应用会保留托盘图标、显示授权引导并自动重试；授权后无需重新启动。
 
 - 授权步骤
   - 在这两个页面通过“+”添加 `dist/SpacePP.app`，并打开开关。
 
-- 临时签名（ad-hoc）以增强识别稳定性
+- 使用长期本地证书签名并验证
 ```bash
-codesign --force --deep --sign - dist/SpacePP.app
-codesign -vvv --deep dist/SpacePP.app
+./scripts/build_app.sh
+codesign --verify --deep --strict --verbose=2 dist/SpacePP.app
 ```
 
 - 重打包导致授权失效
-  - 每次重新构建 `.app` 可能改变路径/签名；如果授权开关无法开启或不生效，删除旧条目后重新添加新的 `SpacePP.app`。
+  - 使用同一张本地证书可保持签名身份稳定；更换证书或应用路径后，可能需要删除旧权限条目并重新添加。
   - 可选重置（会影响所有应用，谨慎执行）：
 ```bash
 tccutil reset Accessibility
@@ -205,7 +231,7 @@ tail -n 100 /tmp/spacepp.out
 
 ### 🖼️ 应用图标生成
 
-- 推荐依赖（获得清晰矢量渲染）
+- 必需依赖（确保所有分辨率图标正确渲染）
   - `brew install librsvg`
 
 - 从 `icons/hyper_icon.svg` 生成图标系列和 .icns
