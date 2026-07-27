@@ -177,9 +177,21 @@ open dist/SpacePP.app
 
 ### 在另一台 Mac 上使用
 
-将打包脚本生成的 `dist/SpacePP-<版本>-macos-<架构>.zip` 复制到另一台 Mac 并解压。压缩包中包含 App、公开证书和信任脚本。
+当前 Release 提供的是使用自签名证书构建、未经 Apple 公证的 arm64（Apple 芯片）版本。因此，新 Mac 第一次安装时**必须手动信任随包提供的公开证书**；只双击 App 通常无法直接运行。
 
-然后执行：
+推荐使用以下全图形界面流程：
+
+1. 从 GitHub Releases 下载 `SpacePP-<版本>-macos-arm64.zip`，双击解压。
+2. 双击解压目录中的 `spacepp-local-signing.crt`，将证书添加到“登录”钥匙串。
+3. 打开“钥匙串访问”，选择“登录”→“证书”，找到 **SpacePP Local Self-Signed** 并双击。
+4. 展开“信任”，将“使用此证书时”设为“始终信任”；关闭窗口，并按系统提示输入当前 Mac 的登录密码或使用 Touch ID。
+5. 将 `SpacePP.app` 拖入“应用程序”文件夹。
+6. 在 Finder 的“应用程序”中按住 Control 点击 `SpacePP.app`，选择“打开”，再在确认窗口中选择“打开”。如果没有“打开”按钮，请前往“系统设置”→“隐私与安全性”，在安全提示下点击“仍要打开”。
+7. SpacePP 启动后不会显示 Dock 图标，请在菜单栏找到其图标。按应用提示，分别在“系统设置”→“隐私与安全性”→“辅助功能”和“输入监控”中添加 `/Applications/SpacePP.app` 并打开开关。
+
+证书信任、首次打开确认、辅助功能和输入监控是不同的 macOS 安全机制，首次安装时都需要完成。后续版本只要继续使用同一证书、Bundle ID 和安装路径，通常无需重复配置。
+
+也可以使用压缩包中的脚本完成证书信任和安装：
 
 ```bash
 cd SpacePP-<版本>-macos-<架构>
@@ -188,7 +200,7 @@ cp -R SpacePP.app /Applications/
 open /Applications/SpacePP.app
 ```
 
-第二台 Mac 仍需单独授予“辅助功能”和“输入监控”权限。只要后续构建继续使用同一张证书和 Bundle ID，更新 App 时签名身份保持稳定。
+信任脚本只导入公开证书，不包含或导入签名私钥。
 
 ### GitHub 自动构建与发布
 

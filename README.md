@@ -177,9 +177,21 @@ open dist/SpacePP.app
 
 ### Using the app on another Mac
 
-Copy the generated `dist/SpacePP-<version>-macos-<architecture>.zip` to the other Mac and extract it. The archive contains the app, public certificate, and trust helper.
+The current Release is an arm64 (Apple silicon) build signed with a self-signed certificate and is not notarized by Apple. On a new Mac, you **must manually trust the included public certificate** before first use; simply double-clicking the app will usually not open it.
 
-Then run:
+Recommended graphical installation:
+
+1. Download `SpacePP-<version>-macos-arm64.zip` from GitHub Releases and double-click it to extract it.
+2. Double-click `spacepp-local-signing.crt` and add it to the **login** keychain.
+3. Open Keychain Access, select **login** → **Certificates**, find **SpacePP Local Self-Signed**, and double-click it.
+4. Expand **Trust**, set **When using this certificate** to **Always Trust**, close the window, and authenticate with the Mac login password or Touch ID.
+5. Drag `SpacePP.app` into the Applications folder.
+6. In Finder → Applications, Control-click `SpacePP.app`, choose **Open**, then confirm **Open**. If that button is unavailable, go to System Settings → Privacy & Security and click **Open Anyway** under the security message.
+7. SpacePP has no Dock icon. Find its icon in the menu bar, then add `/Applications/SpacePP.app` and enable it under System Settings → Privacy & Security → Accessibility and Input Monitoring.
+
+Certificate trust, the first-open confirmation, Accessibility, and Input Monitoring are separate macOS security controls and must all be completed on first installation. Later updates normally retain permissions when they use the same certificate, bundle identifier, and installation path.
+
+Alternatively, use the included helper script:
 
 ```bash
 cd SpacePP-<version>-macos-<architecture>
@@ -188,7 +200,7 @@ cp -R SpacePP.app /Applications/
 open /Applications/SpacePP.app
 ```
 
-The second Mac must grant Accessibility and Input Monitoring permissions separately. As long as later builds use the same certificate and bundle identifier, the app keeps a stable signing identity across updates.
+The helper imports only the public certificate; it does not contain or import the signing private key.
 
 ### Automated GitHub builds and releases
 
