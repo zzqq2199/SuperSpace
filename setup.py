@@ -1,17 +1,19 @@
 from setuptools import setup
+from version import __version__
 
 APP = ["main.py"]
 OPTIONS = {
     "includes": ["Quartz", "AppKit"],
-    "resources": ["icons"],
-    "iconfile": "icons/spacepp.icns",
+    "resources": ["icons", "config.json"],
+    "iconfile": "icons/SpacePP.icns",
     "excludes": ["zlib"],
     "semi_standalone": True,
     "plist": {
         "CFBundleName": "SpacePP",
         "CFBundleIdentifier": "com.local.spacepp",
-        "CFBundleVersion": "1.1.0",
-        "CFBundleIconFile": "spacepp.icns",
+        "CFBundleShortVersionString": __version__,
+        "CFBundleVersion": __version__,
+        "CFBundleIconFile": "SpacePP.icns",
         "LSUIElement": True,
         "NSHighResolutionCapable": True,
     },
@@ -19,6 +21,7 @@ OPTIONS = {
 
 setup(
     name="SpacePP",
+    version=__version__,
     app=APP,
     options={"py2app": OPTIONS},
     install_requires=[

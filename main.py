@@ -2,15 +2,18 @@ import sys
 import Quartz
 import AppKit
 import os
+import traceback
 from event_handler import HyperSpace, OUR_EVENT_TAG
 from key_codes import KeyCodes
+from version import __version__
 
 # 获取脚本目录
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-try:
-    os.environ['SPACEPP_CONFIG'] = os.path.join(SCRIPT_DIR, 'config.json')
-except Exception:
-    pass
+os.environ['SPACEPP_CONFIG'] = os.path.join(SCRIPT_DIR, 'config.json')
+
+def _log_exception(context):
+    print(f"[SpacePP] {context}")
+    traceback.print_exc()
 
 def _redirect_output_if_app():
     try:
@@ -20,7 +23,7 @@ def _redirect_output_if_app():
             sys.stderr = f
             print("[SpacePP] start pid=", os.getpid())
     except Exception:
-        pass
+        _log_exception("failed to redirect app output")
 
 _redirect_output_if_app()
 
@@ -42,7 +45,7 @@ class TrayIcon(AppKit.NSObject):
         self.setup_menu()
         
         # 设置提示文本
-        self.status_item.setToolTip_("Space++ - 正在运行")
+        self.status_item.setToolTip_(f"Space++ {__version__} - 正在运行")
         return self
     
     def setup_menu(self):
@@ -53,6 +56,13 @@ class TrayIcon(AppKit.NSObject):
         about_item = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("关于 Space++", "showAbout:", "")
         about_item.setTarget_(self)
         menu.addItem_(about_item)
+
+        # 添加不可点击的当前版本，便于确认正在运行的构建
+        version_item = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+            f"当前版本：{__version__}", None, ""
+        )
+        version_item.setEnabled_(False)
+        menu.addItem_(version_item)
         
         # 添加分隔线
         menu.addItem_(AppKit.NSMenuItem.separatorItem())
@@ -69,12 +79,18 @@ class TrayIcon(AppKit.NSObject):
     def set_idle_icon(self):
         # 设置空闲状态图标
         image = AppKit.NSImage.alloc().initWithContentsOfFile_(self.idle_icon_path)
+        if image is None:
+            print(f"[SpacePP] unable to load icon: {self.idle_icon_path}")
+            return
         image.setTemplate_(False)  # 使图标适应系统外观
         self.status_item.setImage_(image)
     
     def set_hyper_icon(self):
         # 设置Hyper模式图标
         image = AppKit.NSImage.alloc().initWithContentsOfFile_(self.hyper_icon_path)
+        if image is None:
+            print(f"[SpacePP] unable to load icon: {self.hyper_icon_path}")
+            return
         image.setTemplate_(False)  # 使图标适应系统外观
         self.status_item.setImage_(image)
     
@@ -99,8 +115,12 @@ class TrayIcon(AppKit.NSObject):
             
             host_window.setHasShadow_(False)
             alert = AppKit.NSAlert.alloc().init()
-            alert.setMessageText_("a demo!")
-            alert.setInformativeText_("这是一个Space++的演示版本")
+            alert.setMessageText_("Space++")
+            alert.setInformativeText_(
+                f"版本 {__version__}\n\n"
+                "将空格键变成 Hyper 键的 macOS 键盘效率工具。\n\n"
+                "© 2026 Quan Zhou"
+            )
             alert.addButtonWithTitle_("确定")
             
             # 使用sheet方式显示
@@ -110,17 +130,14 @@ class TrayIcon(AppKit.NSObject):
             )
             AppKit.NSApp.runModalForWindow_(host_window)
             
-        except Exception as e:
-            # import traceback
-            # print(f"显示关于对话框时出错: {e}")
-            # print(traceback.format_exc())
-            pass
+        except Exception:
+            _log_exception("failed to show About dialog")
 
     def quit_(self, sender):
         try:
             AppKit.NSApp.terminate_(self)
         except Exception:
-            pass
+            _log_exception("failed to terminate application")
 
 class AppDelegate(AppKit.NSObject):
     def init(self):
@@ -135,6 +152,7 @@ class AppDelegate(AppKit.NSObject):
         
         # 设置事件监听
         self.event_tap = None
+        self.event_tap_source = None
         return self
     
     def applicationDidFinishLaunching_(self, notification):
@@ -146,18 +164,14 @@ class AppDelegate(AppKit.NSObject):
         self._register_workspace_notifications()
     
     def setup_event_tap(self):
-        if self.event_tap:
-            try:
-                Quartz.CGEventTapEnable(self.event_tap, False)
-            except Exception:
-                pass
+        self._remove_event_tap()
+
         def event_callback(proxy, type, event, refcon):
             if type in [Quartz.kCGEventTapDisabledByTimeout, Quartz.kCGEventTapDisabledByUserInput]:
-                try:
+                print(f"[SpacePP] event tap disabled ({type}), re-enabling")
+                if self.event_tap:
                     Quartz.CGEventTapEnable(self.event_tap, True)
-                except Exception:
-                    pass
-                return None
+                return event
             if Quartz.CGEventGetIntegerValueField(event, Quartz.kCGEventSourceUserData) == OUR_EVENT_TAG:
                 return event
             
@@ -181,7 +195,7 @@ class AppDelegate(AppKit.NSObject):
                     is_down = (flags & Quartz.kCGEventFlagMaskControl) != 0
                 elif key_code in [KeyCodes.option, KeyCodes.right_option]:
                     is_down = (flags & Quartz.kCGEventFlagMaskAlternate) != 0
-                elif key_code == KeyCodes.command:
+                elif key_code in [KeyCodes.command, KeyCodes.right_command]:
                     is_down = (flags & Quartz.kCGEventFlagMaskCommand) != 0
                 elif key_code == KeyCodes.caps_lock:
                     is_down = (flags & Quartz.kCGEventFlagMaskAlphaShift) != 0
@@ -193,21 +207,52 @@ class AppDelegate(AppKit.NSObject):
 
             return event
 
-        self.event_tap = Quartz.CGEventTapCreate(
-            Quartz.kCGSessionEventTap, Quartz.kCGHeadInsertEventTap, Quartz.kCGEventTapOptionDefault,
-            Quartz.CGEventMaskBit(Quartz.kCGEventKeyDown) | Quartz.CGEventMaskBit(Quartz.kCGEventKeyUp) | Quartz.CGEventMaskBit(Quartz.kCGEventFlagsChanged),
-            event_callback, self.hyper_space
-        )
+        try:
+            self.event_tap = Quartz.CGEventTapCreate(
+                Quartz.kCGSessionEventTap, Quartz.kCGHeadInsertEventTap, Quartz.kCGEventTapOptionDefault,
+                Quartz.CGEventMaskBit(Quartz.kCGEventKeyDown) | Quartz.CGEventMaskBit(Quartz.kCGEventKeyUp) | Quartz.CGEventMaskBit(Quartz.kCGEventFlagsChanged),
+                event_callback, self.hyper_space
+            )
+        except Exception:
+            _log_exception("failed to create event tap")
+            self.event_tap = None
 
         if not self.event_tap:
-            print("Error: Unable to create event tap. You might need to enable Accessibility permissions.")
-            self.applicationShouldTerminate_(self)
+            print("[SpacePP] unable to create event tap; grant Accessibility and Input Monitoring permissions")
+            AppKit.NSApp.terminate_(self)
             return
 
-        run_loop_source = Quartz.CFMachPortCreateRunLoopSource(None, self.event_tap, 0)
-        Quartz.CFRunLoopAddSource(Quartz.CFRunLoopGetCurrent(), run_loop_source, Quartz.kCFRunLoopCommonModes)
+        self.event_tap_source = Quartz.CFMachPortCreateRunLoopSource(None, self.event_tap, 0)
+        Quartz.CFRunLoopAddSource(
+            Quartz.CFRunLoopGetCurrent(),
+            self.event_tap_source,
+            Quartz.kCFRunLoopCommonModes,
+        )
         Quartz.CGEventTapEnable(self.event_tap, True)
         print("[SpacePP] event tap ready")
+
+    def _remove_event_tap(self):
+        if self.event_tap:
+            try:
+                Quartz.CGEventTapEnable(self.event_tap, False)
+            except Exception:
+                _log_exception("failed to disable event tap")
+        if self.event_tap_source:
+            try:
+                Quartz.CFRunLoopRemoveSource(
+                    Quartz.CFRunLoopGetCurrent(),
+                    self.event_tap_source,
+                    Quartz.kCFRunLoopCommonModes,
+                )
+            except Exception:
+                _log_exception("failed to remove event tap run-loop source")
+        if self.event_tap:
+            try:
+                Quartz.CFMachPortInvalidate(self.event_tap)
+            except Exception:
+                _log_exception("failed to invalidate event tap")
+        self.event_tap_source = None
+        self.event_tap = None
     
     def _register_workspace_notifications(self):
         try:
@@ -217,7 +262,7 @@ class AppDelegate(AppKit.NSObject):
             if hasattr(AppKit, "NSWorkspaceSessionDidBecomeActiveNotification"):
                 nc.addObserver_selector_name_object_(self, "workspaceSessionActive:", AppKit.NSWorkspaceSessionDidBecomeActiveNotification, None)
         except Exception:
-            pass
+            _log_exception("failed to register workspace notifications")
 
     def workspaceWillSleep_(self, notification):
         try:
@@ -225,26 +270,25 @@ class AppDelegate(AppKit.NSObject):
                 Quartz.CGEventTapEnable(self.event_tap, False)
                 print("[SpacePP] event tap disabled (sleep)")
         except Exception:
-            pass
+            _log_exception("failed to disable event tap before sleep")
 
     def workspaceDidWake_(self, notification):
         try:
             print("[SpacePP] wake detected, reinitializing event tap")
             self.setup_event_tap()
         except Exception:
-            pass
+            _log_exception("failed to reinitialize event tap after wake")
 
     def workspaceSessionActive_(self, notification):
         try:
             print("[SpacePP] session active, reinitializing event tap")
             self.setup_event_tap()
         except Exception:
-            pass
+            _log_exception("failed to reinitialize event tap for active session")
     
     def applicationShouldTerminate_(self, sender):
         # 清理资源
-        if self.event_tap:
-            Quartz.CGEventTapEnable(self.event_tap, False)
+        self._remove_event_tap()
         return AppKit.NSTerminateNow
 
 if __name__ == "__main__":
@@ -258,7 +302,7 @@ if __name__ == "__main__":
         if hasattr(delegate, 'hyper_space') and hasattr(delegate.hyper_space, 'config_path'):
             print("[SpacePP] config path:", delegate.hyper_space.config_path)
     except Exception:
-        pass
+        _log_exception("failed to report config path")
     # delegate.tray_icon.showAbout_(None)
     
     

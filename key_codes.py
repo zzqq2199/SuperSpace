@@ -96,6 +96,7 @@ class KeyCodes:
     space = 0x31
     delete = 0x33
     escape = 0x35
+    right_command = 0x36
     command = 0x37
     shift = 0x38
     caps_lock = 0x39

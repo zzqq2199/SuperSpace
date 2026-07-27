@@ -100,5 +100,3 @@ temp/
 # Ascend 
 fusion_result.json
 kernel_meta
-
-uv.lock

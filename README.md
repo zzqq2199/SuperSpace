@@ -16,7 +16,7 @@ Space++ is a lightweight macOS keyboard shortcut enhancement tool that transform
 ## 🚀 Requirements
 
 - macOS system
-- Python 3.6 or higher
+- Python 3.10 or higher
 - Quartz library (provided by pyobjc)
 
 ## 📦 Installation
@@ -57,12 +57,15 @@ uv run python main.py
 | `space + u` | Page down | Page Down |
 | `space + i` | Page up | Page Up |
 | `space + e` | Exit/Cancel | Esc |
+| `space + q` | Quit Space++ | — |
 | `space + m` | Delete previous character | Delete |
 | `space + n` | Delete previous word | Option+Delete |
 | `space + b` | Delete entire line | Command+Delete |
 | `space + ,` | Delete next character | Forward Delete |
 | `space + .` | Delete next word | Option+Forward Delete |
 | `space + /` | Delete to end of line | Command+Forward Delete |
+| `space + c` | Copy | Command+C |
+| `space + v` | Paste | Command+V |
 | `space + 1-0` | Function keys F1-F10 | F1-F10 |
 | `space + -` | Function key F11 | F11 |
 | `space + =` | Function key F12 | F12 |
@@ -74,6 +77,8 @@ space++/
 ├── main.py          # Main program entry, responsible for event listening and initialization
 ├── event_handler.py # Core event handling logic, including state management and shortcut mapping
 ├── key_codes.py     # macOS keyboard key code definitions
+├── config.json      # Shortcut, logging, and hold-behavior configuration
+├── tests/           # State-machine unit tests
 ├── .gitignore       # Git ignore file configuration
 └── README.md        # Project documentation
 ```
@@ -110,12 +115,6 @@ self.hyper_keys_map = {
 3. Shortcuts may not work properly in certain full-screen applications
 4. If you encounter permission issues, you can manually add Terminal or Python in "System Preferences > Security & Privacy > Privacy > Input Monitoring"
 
-## 📝 TODO
-
-1. [ ] Convert configuration to JSON/YAML format for easier usage
-2. [ ] Map Home/End keys to cmd+←/→
-3. [ ] Add option to customize the behavior when holding the spacebar alone
-
 ## 🤝 Contribution Guide
 
 Contributions are welcome! Please submit Issues and Pull Requests to help improve this project.
@@ -131,6 +130,10 @@ Made with ❤️ for macOS power users
 *Enhance your keyboard efficiency with Space++!*
 
 ## 📝 Changelog
+
+### 1.1.1
+- Updated the About dialog with the app description, version, and copyright
+- Added a disabled “Current Version” tray-menu item for quick build verification
 
 ### 1.1.0
 - Status bar “Quit” menu item enabled and wired to terminate the app
@@ -211,12 +214,12 @@ uv run -p 3.12 python scripts/generate_icon.py
 ```
   - Outputs:
     - PNGs: `icons/SpacePP.iconset/icon_128x128.png`, `icon_256x256.png`, `icon_512x512.png` and `@2x` variants
-    - ICNS: `icons/spacepp.icns`
+    - ICNS: `icons/SpacePP.icns`
 
 - Rebuild the app with the custom icon
 ```bash
 uv run -p 3.12 pyinstaller --noconfirm SpacePP.spec
 open dist/SpacePP.app
 ```
-  - PyInstaller uses `icons/spacepp.icns` via `SpacePP.spec`
+  - PyInstaller uses `icons/SpacePP.icns` via `SpacePP.spec`
   - If building with py2app: `setup.py` sets `iconfile` and `CFBundleIconFile`

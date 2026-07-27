@@ -16,7 +16,7 @@ Space++ 是一个轻量级的 macOS 键盘快捷键增强工具，通过将空�
 ## 🚀 安装要求
 
 - macOS 系统
-- Python 3.6 或更高版本
+- Python 3.10 或更高版本
 - Quartz 库（pyobjc 提供）
 
 ## 📦 安装步骤
@@ -57,12 +57,15 @@ uv run python main.py
 | `space + u` | 向下翻页 | Page Down |
 | `space + i` | 向上翻页 | Page Up |
 | `space + e` | 退出/取消 | Esc |
+| `space + q` | 退出 Space++ | — |
 | `space + m` | 删除前一个字符 | Delete |
 | `space + n` | 删除前一个单词 | Option+Delete |
 | `space + b` | 删除整行 | Command+Delete |
 | `space + ,` | 删除后一个字符 | Forward Delete |
 | `space + .` | 删除后一个单词 | Option+Forward Delete |
 | `space + /` | 删除到行尾 | Command+Forward Delete |
+| `space + c` | 复制 | Command+C |
+| `space + v` | 粘贴 | Command+V |
 | `space + 1-0` | 功能键 F1-F10 | F1-F10 |
 | `space + -` | 功能键 F11 | F11 |
 | `space + =` | 功能键 F12 | F12 |
@@ -74,6 +77,8 @@ space++/
 ├── main.py          # 主程序入口，负责事件监听和初始化
 ├── event_handler.py # 核心事件处理逻辑，包含状态管理和快捷键映射
 ├── key_codes.py     # macOS 键盘按键代码定义
+├── config.json      # 快捷键、日志和长按行为配置
+├── tests/           # 状态机单元测试
 ├── .gitignore       # Git 忽略文件配置
 └── README.md        # 项目说明文档
 ```
@@ -125,6 +130,10 @@ Made with ❤️ for macOS power users
 *提升你的键盘效率，从 Space++ 开始！*
 
 ## 📝 版本更新
+
+### 1.1.1
+- 更新“关于 Space++”弹窗，展示应用简介、版本和版权信息
+- 托盘菜单新增不可点击的“当前版本”项，方便确认正在运行的构建
 
 ### 1.1.0
 - 状态栏“退出”菜单项启用并可正常退出应用
@@ -205,12 +214,12 @@ uv run -p 3.12 python scripts/generate_icon.py
 ```
   - 产物：
     - PNG：`icons/SpacePP.iconset/icon_128x128.png`、`icon_256x256.png`、`icon_512x512.png` 及各自的 `@2x`
-    - ICNS：`icons/spacepp.icns`
+    - ICNS：`icons/SpacePP.icns`
 
 - 使用生成的图标重新打包
 ```bash
 uv run -p 3.12 pyinstaller --noconfirm SpacePP.spec
 open dist/SpacePP.app
 ```
-  - PyInstaller 通过 `SpacePP.spec` 引用 `icons/spacepp.icns`
+  - PyInstaller 通过 `SpacePP.spec` 引用 `icons/SpacePP.icns`
   - 若用 py2app 构建，`setup.py` 已设置 `iconfile` 与 `CFBundleIconFile`

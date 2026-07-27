@@ -1,5 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import os
+import runpy
+
+__version__ = runpy.run_path(os.path.join(SPECPATH, 'version.py'))['__version__']
 
 a = Analysis(
     ['main.py'],
@@ -45,6 +49,10 @@ coll = COLLECT(
 app = BUNDLE(
     coll,
     name='SpacePP.app',
-    icon='icons/spacepp.icns',
-    bundle_identifier=None,
+    icon='icons/SpacePP.icns',
+    bundle_identifier='com.local.spacepp',
+    info_plist={
+        'CFBundleShortVersionString': __version__,
+        'CFBundleVersion': __version__,
+    },
 )

@@ -1,10 +1,12 @@
 [project]
 name = "spacepp"
-version = "1.1.0"
-author = "Quan Zhou"
+version = "1.1.1"
+authors = [
+  { name = "Quan Zhou" },
+]
 description = "Space++ macOS 键盘快捷键增强工具"
 readme = "README.md"
-requires-python = ">=3.6"
+requires-python = ">=3.10"
 dependencies = [
   "pyobjc-core>=8.0.0",
   "pyobjc-framework-Cocoa>=8.0.0",

@@ -23,7 +23,7 @@ def generate_icns():
         double = os.path.join(iconset, f"icon_{size}x{size}@2x.png")
         convert_svg_to_png("icons/hyper_icon.svg", double, size * 2)
     # Build icns
-    run(["iconutil", "-c", "icns", "-o", "icons/spacepp.icns", iconset])
+    run(["iconutil", "-c", "icns", "-o", "icons/SpacePP.icns", iconset])
 
 if __name__ == "__main__":
     generate_icns()
