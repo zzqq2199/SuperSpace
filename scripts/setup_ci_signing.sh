@@ -19,18 +19,6 @@ fi
 
 printf '%s' "$SPACEPP_SIGNING_P12_BASE64" | base64 -D > "$PKCS12_FILE"
 
-pkcs12_compatibility_args=()
-if [[ "$(openssl version)" == OpenSSL\ 3* ]]; then
-    pkcs12_compatibility_args+=(-legacy)
-fi
-
-openssl pkcs12 "${pkcs12_compatibility_args[@]}" \
-    -in "$PKCS12_FILE" \
-    -clcerts \
-    -nokeys \
-    -passin env:SPACEPP_SIGNING_PASSWORD \
-    -out "$CERTIFICATE_FILE"
-
 security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
 security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
@@ -48,6 +36,11 @@ security set-key-partition-list \
     -s \
     -k "$KEYCHAIN_PASSWORD" \
     "$KEYCHAIN_PATH" >/dev/null
+
+security find-certificate \
+    -c "$CERTIFICATE_NAME" \
+    -p \
+    "$KEYCHAIN_PATH" > "$CERTIFICATE_FILE"
 
 security add-trusted-cert \
     -r trustRoot \
