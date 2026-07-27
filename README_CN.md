@@ -190,6 +190,29 @@ open /Applications/SpacePP.app
 
 第二台 Mac 仍需单独授予“辅助功能”和“输入监控”权限。只要后续构建继续使用同一张证书和 Bundle ID，更新 App 时签名身份保持稳定。
 
+### GitHub 自动构建与发布
+
+仓库中的 `.github/workflows/release.yml` 会在推送 `main` 后：
+
+1. 在 arm64 macOS Runner 上运行测试
+2. 导入稳定的本地签名证书
+3. 构建并上传 Actions Artifact
+4. 如果 `version.py` 中的版本尚无对应标签，则创建 `v<版本>` GitHub Release 并上传 ZIP
+
+首次启用前，在 GitHub 仓库的 **Settings → Secrets and variables → Actions** 中添加：
+
+- `SPACEPP_SIGNING_P12_BASE64`：`.signing/spacepp-local-signing.p12` 的 Base64 内容
+- `SPACEPP_SIGNING_PASSWORD`：`.signing/spacepp-local-signing.password` 的内容
+
+在本机复制 Secret 值：
+
+```bash
+base64 < .signing/spacepp-local-signing.p12 | tr -d '\n' | /usr/bin/pbcopy
+/usr/bin/pbcopy < .signing/spacepp-local-signing.password
+```
+
+创建新正式版本前，需要同步更新 `version.py` 和 `pyproject.toml`。同一版本号再次推送只更新 Actions Artifact，不重复创建 Release。
+
 日志
 - 以 .app 运行时，标准输出/错误会重定向到 `/tmp/spacepp.out`。
 

@@ -190,6 +190,29 @@ open /Applications/SpacePP.app
 
 The second Mac must grant Accessibility and Input Monitoring permissions separately. As long as later builds use the same certificate and bundle identifier, the app keeps a stable signing identity across updates.
 
+### Automated GitHub builds and releases
+
+`.github/workflows/release.yml` runs after every push to `main`:
+
+1. Runs tests on an arm64 macOS runner
+2. Imports the stable local signing identity
+3. Builds and uploads an Actions artifact
+4. If the version in `version.py` has no matching tag, creates a `v<version>` GitHub Release and uploads the ZIP
+
+Before enabling the workflow, add these repository secrets under **Settings → Secrets and variables → Actions**:
+
+- `SPACEPP_SIGNING_P12_BASE64`: Base64 content of `.signing/spacepp-local-signing.p12`
+- `SPACEPP_SIGNING_PASSWORD`: Content of `.signing/spacepp-local-signing.password`
+
+Copy the secret values locally:
+
+```bash
+base64 < .signing/spacepp-local-signing.p12 | tr -d '\n' | /usr/bin/pbcopy
+/usr/bin/pbcopy < .signing/spacepp-local-signing.password
+```
+
+Before creating a new formal release, update both `version.py` and `pyproject.toml`. Further pushes with an existing version only update the Actions artifact and do not create a duplicate Release.
+
 Logs
 - When running as an app bundle, stdout/stderr are redirected to `/tmp/spacepp.out`.
 

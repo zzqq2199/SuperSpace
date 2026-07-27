@@ -1,0 +1,86 @@
+name: Build and release SpacePP
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spacepp-main-release
+  cancel-in-progress: true
+
+env:
+  SPACEPP_SIGNING_IDENTITY: SpacePP Local Self-Signed
+  SPACEPP_SIGNING_P12_BASE64: ${{ secrets.SPACEPP_SIGNING_P12_BASE64 }}
+  SPACEPP_SIGNING_PASSWORD: ${{ secrets.SPACEPP_SIGNING_PASSWORD }}
+
+jobs:
+  build:
+    runs-on: macos-15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Verify arm64 runner
+        run: test "$(uname -m)" = "arm64"
+
+      - name: Install icon renderer
+        run: brew list librsvg >/dev/null 2>&1 || brew install librsvg
+
+      - name: Import stable signing identity
+        run: ./scripts/setup_ci_signing.sh
+
+      - name: Run tests
+        run: uv run python -m unittest discover -s tests -v
+
+      - name: Build signed app
+        run: ./scripts/build_app.sh --clean
+
+      - name: Read release version
+        id: version
+        shell: bash
+        run: |
+          version="$(uv run python -c 'from version import __version__; print(__version__)')"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid release version: $version" >&2
+            exit 1
+          fi
+
+          tag="v$version"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            release_needed=false
+          else
+            release_needed=true
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "release_needed=$release_needed" >> "$GITHUB_OUTPUT"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SpacePP-${{ steps.version.outputs.version }}-${{ github.sha }}
+          path: dist/SpacePP-${{ steps.version.outputs.version }}-macos-arm64.zip
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: steps.version.outputs.release_needed == 'true'
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: SpacePP ${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: dist/SpacePP-${{ steps.version.outputs.version }}-macos-arm64.zip
