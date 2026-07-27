@@ -42,10 +42,11 @@ security find-certificate \
     -p \
     "$KEYCHAIN_PATH" > "$CERTIFICATE_FILE"
 
-security add-trusted-cert \
+sudo security add-trusted-cert \
+    -d \
     -r trustRoot \
     -p codeSign \
-    -k "$KEYCHAIN_PATH" \
+    -k /Library/Keychains/System.keychain \
     "$CERTIFICATE_FILE"
 
 if ! security find-identity -v -p codesigning "$KEYCHAIN_PATH" |
